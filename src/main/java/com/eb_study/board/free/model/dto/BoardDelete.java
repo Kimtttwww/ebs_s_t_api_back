@@ -1,7 +1,7 @@
 package com.eb_study.board.free.model.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +17,6 @@ public class BoardDelete {
 	private int boardNo;
 
 	@Schema(description = "비밀번호", minLength = 4, maxLength = 15)
-	@NotEmpty //@Length(min = 4, max = 15) @Pattern(regexp = "^.[a-zA-Z0-9!@#$%^&*]{4,15}$")
+	@NotBlank //@Length(min = 4, max = 15) @Pattern(regexp = "^.[a-zA-Z0-9!@#$%^&*]{4,15}$")
 	private String password;
 }
