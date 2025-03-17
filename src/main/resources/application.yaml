@@ -1,0 +1,32 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  tomcat:
+    uri-encoding: UTF-8
+  
+spring:
+  application:
+    name: eb-study-template-api
+  datasource:
+    url: jdbc:mysql://localhost:3306/ebrainsoft_study
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ebsoft
+    password: ebsoft
+  servlet:
+    multipart:
+      max-file-size: 3MB
+
+mybatis:
+  mapper-locations: classpath*:/mappers/**/*.xml
+  type-aliases-package: com.eb_study
+  configuration:
+    jdbc-type-for-null: null
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level: 
+    org:
+      apache:
+        ibatis: DEBUG

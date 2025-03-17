@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="freeBoardMapper">
+
+	<sql id="listFLFOption">
+		<where>
+			<if test='startDate neq null and endDate neq null'>
+	 			AND #{startDate} &lt;= created AND
+	 			created &lt; STR_TO_DATE(#{endDate}, '%Y-%m-%d') + 1
+			</if>
+			<if test='category gt 0'>
+				AND category_no = #{category}
+			</if>
+			<if test='query neq null and !query.isEmpty()'>
+				AND (writer LIKE CONCAT('%', #{query}, '%') OR title LIKE CONCAT('%', #{query}, '%') OR content LIKE CONCAT('%', #{query}, '%'))
+			</if>
+		</where>
+	</sql>
+
+	<sql id="joinBoardToCategoryPrefix">
+		SELECT B.*, name AS CATEGORY_NAME
+		FROM (
+	</sql>
+
+	<sql id="joinBoardToCategorySuffix">
+		) B
+		JOIN CATEGORY USING(category_no)
+	</sql>
+
+	<resultMap type="boardDetailSelect" id="detailSelectMap" autoMapping="true">
+		<id property="boardNo" column="board_no"/>
+		<collection property="attachs" javaType="list" ofType="attach" select="getAttachsToBoard" autoMapping="true" column="" />
+	</resultMap>
+
+	<select id="getBoardList" parameterType="freeBoardSearchOption" resultType="boardSelect">
+		<include refid="joinBoardToCategoryPrefix" />
+			SELECT * FROM BOARD
+			<include refid="listFLFOption" />
+			ORDER BY created DESC, board_no DESC
+			LIMIT #{offset}, #{perPage}
+		<include refid="joinBoardToCategorySuffix" />
+	</select>
+
+	<select id="getCategoryList" resultType="category">
+		SELECT * FROM CATEGORY
+	</select>
+
+	<select id="getBoard" parameterType="int" resultMap="detailSelectMap">
+		<include refid="joinBoardToCategoryPrefix" />
+			SELECT * FROM BOARD
+			WHERE board_no = #{boardNo}
+		<include refid="joinBoardToCategorySuffix" />
+	</select>
+
+	<select id="getAllBoardCount" parameterType="freeBoardSearchOption" resultType="int">
+		SELECT COUNT(*) FROM BOARD
+		<include refid="listFLFOption" />
+	</select>
+
+	<select id="getBoardPassword" parameterType="int" resultType="string">
+		SELECT password FROM BOARD
+		WHERE board_no = #{boardNo}
+	</select>
+
+	<select id="getAttachsToBoard" parameterType="int" resultType="attach">
+		SELECT * FROM ATTACH
+		WHERE board_no = #{boardNo}
+		ORDER BY attach_no
+	</select>
+
+	<update id="increaseViews" parameterType="int">
+		UPDATE BOARD
+		SET VIEWS = VIEWS + 1
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<insert id="insertBoard" parameterType="boardInsert" useGeneratedKeys="true" keyColumn="BOARD_NO" keyProperty="boardNo">
+		INSERT INTO BOARD(category_no, writer, password, title, content, attach)
+		VALUES (#{categoryNo}, #{writer}, #{password}, #{title}, #{content}, #{attach})
+	</insert>
+
+	<update id="updateBoard" parameterType="boardUpdate">
+		UPDATE BOARD
+		SET title = #{title},
+			content = #{content},
+			updated = NOW()
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<insert id="insertReply" parameterType="replyInsert">
+		INSERT INTO REPLY(board_no, content)
+		VALUES (#{boardNo}, #{content})
+	</insert>
+
+	<delete id="deleteReply" parameterType="int">
+		DELETE FROM REPLY
+		WHERE board_no = #{boardNo}
+	</delete>
+
+	<delete id="deleteBoard" parameterType="int">
+		DELETE FROM BOARD
+		WHERE board_no = #{boardNo}
+	</delete>
+
+	<insert id="insertAttachs" parameterType="list">
+		INSERT INTO ATTACH
+		VALUES 
+		<foreach collection="list" item="a" separator=",">
+			(#{a.boardNo}, #{a.attachNo}, #{a.fileOrigin}, #{a.fileRename}, #{a.ext})
+		</foreach>
+	</insert>
+</mapper>
