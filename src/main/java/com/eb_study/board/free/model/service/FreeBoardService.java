@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eb_study.board.free.model.dao.FreeBoardDao;
-import com.eb_study.board.free.model.dto.Attach;
+import com.eb_study.board.free.model.dto.AttachSelect;
 import com.eb_study.board.free.model.dto.BoardDelete;
 import com.eb_study.board.free.model.dto.BoardDetailSelect;
 import com.eb_study.board.free.model.dto.BoardInsert;
@@ -89,9 +89,15 @@ public class FreeBoardService {
 		b.setAttach(check);
 		dao.insertBoard(b);
 
-		List<Attach> a = new FileProcessor().multipartFileToAttachs(b.getBoardNo(), files);
-		if (check) {
-			dao.insertAttachs(a);
+		FileProcessor processor = new FileProcessor();
+		if (check && processor.uploadFileFilter(files)) {
+			List<AttachSelect> a = processor.multipartFileToAttachs(b.getBoardNo(), files);
+			try {
+				dao.insertAttachs(a);
+			} catch (SQLException e) {	// 등록 실패시 업로드된 파일 제거
+				processor.fileRemove(a);
+				throw e;
+			}
 		}
 
 		return b.getBoardNo();

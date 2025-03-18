@@ -116,7 +116,6 @@ public class FreeBoardController {
 			@ModelAttribute @Valid InBoardInsert b,
 		@Parameter(description = "작성할 게시글의 첨부파일")
 			@RequestParam(name = "attachs", required = false) List<MultipartFile> files) throws Exception {
-//		TODO ? recode로 받아서 다른 dto로 service 주면 무슨 소용?
 		return ResponseEntity.ok(service.insertBoard(mapper.toEntity(b), files));
 	}
 

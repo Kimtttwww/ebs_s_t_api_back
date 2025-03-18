@@ -9,7 +9,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @Builder
-public class Attach {
+public class AttachSelect {
 	private int boardNo;
 	private int attachNo;
 	private String fileOrigin;

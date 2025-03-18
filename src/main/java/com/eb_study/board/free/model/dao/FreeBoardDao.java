@@ -7,7 +7,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.eb_study.board.free.model.dto.Attach;
+import com.eb_study.board.free.model.dto.AttachSelect;
 import com.eb_study.board.free.model.dto.BoardDetailSelect;
 import com.eb_study.board.free.model.dto.BoardInsert;
 import com.eb_study.board.free.model.dto.BoardSelect;
@@ -131,7 +131,7 @@ public class FreeBoardDao {
 	 * @param a 첨부파일들
 	 * @throws SQLException 모든 첨부파일 업로드 실패
 	 */
-	public void insertAttachs(List<Attach> a) throws SQLException {
+	public void insertAttachs(List<AttachSelect> a) throws SQLException {
 		boolean result = conn.insert(mapper + "insertAttachs", a) == a.size();
 		if (!result) throw new SQLException("모든 첨부파일 업로드 실패");
 	}

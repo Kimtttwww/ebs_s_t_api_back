@@ -14,5 +14,5 @@ import lombok.ToString;
 public class BoardDetailSelect extends BoardSelect {
 //	TODO 파일 구현 필요
 	@Schema(description = "첨부파일", nullable = true)
-	private List<Attach> attachs;
+	private List<AttachSelect> attachs;
 }

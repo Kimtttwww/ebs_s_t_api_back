@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.eb_study.board.free.model.dto.Attach;
+import com.eb_study.board.free.model.dto.AttachSelect;
 
 public class FileProcessor {
 	private final static String STORAGE = "C:/tools/uploads/ebStudy/free";
@@ -22,24 +26,24 @@ public class FileProcessor {
 
 
 	/**
-	 * multipartfile[] -> list<attach> + save
+	 * multipartfile -> attach, + save
 	 * @param boardNo 게시글 번호
 	 * @param files 첨부파일들
-	 * @return 저장된 첨부파일 metadata들
+	 * @return 저장된 첨부파일 metadata들(attach)
 	 */
-	public List<Attach> multipartFileToAttachs(int boardNo, List<MultipartFile> files) throws IllegalStateException, IOException {
-		List<Attach> list = null;
+	public List<AttachSelect> multipartFileToAttachs(int boardNo, List<MultipartFile> files) throws IllegalStateException, IOException {
+		List<AttachSelect> list = null;
 		
 		if (files != null) {
 			int i = 1;
 			list = new ArrayList<>(files.size());
-			
+
 			for (MultipartFile file : files) {
 				if (file != null && !file.isEmpty()) {
 					String[] fileName = file.getOriginalFilename().split("[.]");
 					String fileRename = fileRenamePolicy(boardNo, i);
 
-					Attach a = Attach.builder()
+					AttachSelect a = AttachSelect.builder()
 							.boardNo(boardNo)
 							.attachNo(i++)
 							.fileOrigin(fileName[0])
@@ -48,7 +52,7 @@ public class FileProcessor {
 							.build();
 
 					list.add(a);
-					file.transferTo(new File(STORAGE, fileRename));
+					file.transferTo(new File(STORAGE, String.format("%s.%s", fileRename, fileName[1])));
 				}
 			}
 		}
@@ -66,7 +70,43 @@ public class FileProcessor {
 		LocalDateTime now = LocalDateTime.now();
 		String date = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
 		int random = (int) (Math.random() * 90000 + 10000);
-		
+
 		return String.format("%d_%d_%s_%d", boardNo, attachNo, date, random);
+	}
+
+
+	/**
+	 * 업로드하고자 하는 파일들의 유형 검사(image만 통과)
+	 * @param files 업로드 하고자 하는 파일들
+	 * @return 모든 파일의 유형과 image의 일치 여부
+	 */
+	public boolean uploadFileFilter(List<MultipartFile> a) {
+		boolean valid = true;
+
+		for (Iterator<MultipartFile> iterator = a.iterator(); valid && iterator.hasNext();) {
+			MultipartFile file = iterator.next();
+
+//			1차 검사
+			valid = file != null && !file.isEmpty() &&	// 파일이 있으면서
+					file.getContentType().toLowerCase().startsWith("image");	// MIME 이 image 인 경우
+
+			Optional<MediaType> mime = MediaTypeFactory.getMediaType(file.getOriginalFilename());
+//			2차 검사, 확장자로 추정한 MIME 이 image 인 경우
+			valid = valid && !mime.isEmpty() && mime.get().getType().toLowerCase().startsWith("image");
+		}
+
+		return valid;
+	}
+	
+	/**
+	 * 파일 삭제
+	 * @param a 업로드된 파일에 관한 정보들
+	 */
+	public void fileRemove(List<AttachSelect> a) {
+		if(a == null || a.isEmpty()) return;
+
+		for (AttachSelect attach : a) {
+			new File(STORAGE , String.format("%s.%s", attach.getFileRename(), attach.getExt())).deleteOnExit();
+		}
 	}
 }

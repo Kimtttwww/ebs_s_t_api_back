@@ -29,7 +29,7 @@
 
 	<resultMap type="boardDetailSelect" id="detailSelectMap" autoMapping="true">
 		<id property="boardNo" column="board_no"/>
-		<collection property="attachs" javaType="list" ofType="attach" select="getAttachsToBoard" autoMapping="true" column="" />
+		<collection property="attachs" ofType="attachSelect" select="getAttachsToBoard" column="board_no" />
 	</resultMap>
 
 	<select id="getBoardList" parameterType="freeBoardSearchOption" resultType="boardSelect">
@@ -62,7 +62,7 @@
 		WHERE board_no = #{boardNo}
 	</select>
 
-	<select id="getAttachsToBoard" parameterType="int" resultType="attach">
+	<select id="getAttachsToBoard" parameterType="int" resultType="attachSelect">
 		SELECT * FROM ATTACH
 		WHERE board_no = #{boardNo}
 		ORDER BY attach_no
