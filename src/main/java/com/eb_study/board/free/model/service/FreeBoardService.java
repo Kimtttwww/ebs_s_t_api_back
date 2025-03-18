@@ -5,12 +5,14 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eb_study.board.free.model.dao.FreeBoardDao;
+import com.eb_study.board.free.model.dto.AttachNum;
 import com.eb_study.board.free.model.dto.AttachSelect;
 import com.eb_study.board.free.model.dto.BoardDelete;
 import com.eb_study.board.free.model.dto.BoardDetailSelect;
@@ -147,12 +149,34 @@ public class FreeBoardService {
 	}
 
 	/**
+	 * 게시글 번호와 첨부파일 번호로 파일 메타데이터 조회
+	 * @param boardNo 게시글 번호
+	 * @param attachNo 첨부파일 번호
+	 * @return 파일 메타데이터
+	 */
+	public AttachSelect getAttach(int boardNo, int attachNo) {
+		AttachNum a = new AttachNum(boardNo, attachNo);
+		return dao.getAttachs(a);
+	}
+
+	/**
+	 * 파일 메타데이터로 실제 첨부파일 조회
+	 * @param a 파일 메타데이터
+	 * @return 실제 첨부파일
+	 * @throws IOException
+	 */
+	public FileSystemResource getAttachResource(@NotNull AttachSelect a) throws IOException {
+		return new FileProcessor().getAttachFromSystem(a);
+	}
+
+
+	/**
 	 * 게시글 변경 전 비밀번호 일치 검사
 	 * @param boardNo 게시글 번호
 	 * @param password 사용자가 입력한 비밀번호
 	 * @return 비밀번호 일치 여부
-	 */
-	public boolean matchBoardPassword(int boardNo, String password) {
+	 */	// TODO 검증은 누구의 역할인가?
+	public boolean matchBoardPassword(int boardNo, @NotEmpty String password) {
 		return new BCryptPasswordEncoder().matches(password, dao.getBoardPassword(boardNo));
 	}
 }

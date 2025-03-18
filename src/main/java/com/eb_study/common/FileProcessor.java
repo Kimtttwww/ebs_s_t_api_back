@@ -9,11 +9,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eb_study.board.free.model.dto.AttachSelect;
+
+import jakarta.validation.constraints.NotNull;
 
 public class FileProcessor {
 	private final static String STORAGE = "C:/tools/uploads/ebStudy/free";
@@ -31,29 +34,27 @@ public class FileProcessor {
 	 * @param files 첨부파일들
 	 * @return 저장된 첨부파일 metadata들(attach)
 	 */
-	public List<AttachSelect> multipartFileToAttachs(int boardNo, List<MultipartFile> files) throws IllegalStateException, IOException {
+	public List<AttachSelect> multipartFileToAttachs(int boardNo, @NotNull List<MultipartFile> files) throws IllegalStateException, IOException {
 		List<AttachSelect> list = null;
-		
-		if (files != null) {
-			int i = 1;
-			list = new ArrayList<>(files.size());
 
-			for (MultipartFile file : files) {
-				if (file != null && !file.isEmpty()) {
-					String[] fileName = file.getOriginalFilename().split("[.]");
-					String fileRename = fileRenamePolicy(boardNo, i);
+		int i = 1;
+		list = new ArrayList<>(files.size());
 
-					AttachSelect a = AttachSelect.builder()
-							.boardNo(boardNo)
-							.attachNo(i++)
-							.fileOrigin(fileName[0])
-							.fileRename(fileRename)
-							.ext(fileName[1])
-							.build();
+		for (MultipartFile file : files) {
+			if (file != null && !file.isEmpty()) {
+				String[] fileName = file.getOriginalFilename().split("[.]");
+				String fileRename = fileRenamePolicy(boardNo, i);
 
-					list.add(a);
-					file.transferTo(new File(STORAGE, String.format("%s.%s", fileRename, fileName[1])));
-				}
+				AttachSelect a = AttachSelect.builder()
+						.boardNo(boardNo)
+						.attachNo(i++)
+						.fileOrigin(fileName[0])
+						.fileRename(fileRename)
+						.ext(fileName[1])
+						.build();
+
+				list.add(a);
+				file.transferTo(new File(STORAGE, String.format("%s.%s", fileRename, fileName[1])));
 			}
 		}
 
@@ -97,7 +98,7 @@ public class FileProcessor {
 
 		return valid;
 	}
-	
+
 	/**
 	 * 파일 삭제
 	 * @param a 업로드된 파일에 관한 정보들
@@ -109,4 +110,17 @@ public class FileProcessor {
 			new File(STORAGE , String.format("%s.%s", attach.getFileRename(), attach.getExt())).deleteOnExit();
 		}
 	}
+
+	/**
+	 * 저장된 파일의 정보 가져오기
+	 * @param a 파일 메타데이터
+	 * @return 실제 파일
+	 */
+	public FileSystemResource getAttachFromSystem(@NotNull AttachSelect a) {
+		File file = new File(STORAGE, String.format("%s.%s", a.getFileRename(), a.getExt()));
+		if (!file.exists()) return null;
+
+		return new FileSystemResource(file);
+	}
+
 }

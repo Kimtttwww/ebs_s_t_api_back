@@ -1,9 +1,13 @@
 package com.eb_study.board.free.controller;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eb_study.board.free.model.dto.ArgsBoardList;
+import com.eb_study.board.free.model.dto.AttachSelect;
 import com.eb_study.board.free.model.dto.BoardDelete;
 import com.eb_study.board.free.model.dto.BoardDetailSelect;
 import com.eb_study.board.free.model.dto.BoardUpdate;
@@ -32,6 +37,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FreeBoardController {
 	@Autowired
 	private FreeBoardService service;
+
 	@Autowired
 	private FreeBoardMapper mapper;
 
@@ -94,6 +101,36 @@ public class FreeBoardController {
 		@Parameter(description = "조회수 증가 여부, (URL Parameter)", examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
 			@RequestParam(name = "add") boolean doIncreaseViews) throws Exception {
 		return ResponseEntity.ok(service.getBoard(boardNo, doIncreaseViews));
+	}
+
+	/**
+	 * 게시글의 첨부파일 다운로드
+	 * @param boardNo 게시글 번호
+	 * @param attachNo 첨부파일 번호
+	 * @return 실제 첨부파일
+	 * @throws IOException
+	 * @throws NullPointerException 잘못된 입력으로 인한 파일 메타데이터 및 파일 조회 실패
+	 */
+	@Operation(summary = "게시글 조회", description = "단일 게시글 조회")
+	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "500", description = "server error")
+	@GetMapping("boards/download/{boardNo}/{attachNo}")
+    public ResponseEntity<FileSystemResource> downloadAttach(
+			@Parameter(description = "게시글번호")
+	    		@PathVariable("boardNo") @Positive int boardNo,
+			@Parameter(description = "첨부파일번호")
+	    		@PathVariable("attachNo") @Positive int attachNo) throws IOException, NullPointerException {
+		AttachSelect a = service.getAttach(boardNo, attachNo);
+		FileSystemResource resource = service.getAttachResource(a);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s.%s\"", a.getFileOrigin(), a.getExt()));
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(resource.contentLength())
+                .body(resource);
 	}
 
 
