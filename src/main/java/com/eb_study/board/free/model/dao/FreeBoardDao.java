@@ -7,6 +7,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.eb_study.board.free.model.dto.AttachNum;
 import com.eb_study.board.free.model.dto.AttachSelect;
 import com.eb_study.board.free.model.dto.BoardDetailSelect;
 import com.eb_study.board.free.model.dto.BoardInsert;
@@ -58,7 +59,6 @@ public class FreeBoardDao {
 		return conn.selectOne(mapper + "getAllBoardCount", option);
 	}
 
-
 	/**
 	 * 게시글 비밀번호 조회
 	 * @param boardNo 조회할 게시글 번호
@@ -67,6 +67,16 @@ public class FreeBoardDao {
 	public String getBoardPassword(int boardNo) {
 		return conn.selectOne(mapper + "getBoardPassword", boardNo);
 	}
+
+	/**
+	 * 첨부파일 조회
+	 * @param a boardNo와 attachNo가 담긴 AttachNum
+	 * @return DB에서 가져온 파일 메타데이터 
+	 */
+	public AttachSelect getAttachs(AttachNum a) {
+		return conn.selectOne(mapper + "getAttachs", a);
+	}
+
 
 	/**
 	 * 조회되는 게시글의 조회수 증가

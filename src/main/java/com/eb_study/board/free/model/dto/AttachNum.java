@@ -9,12 +9,11 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class AttachSelect extends AttachNum {
-	private String fileOrigin;
-	private String fileRename;
-	private String ext;
+public class AttachNum {
+	private int boardNo;
+	private int attachNo;
 }
