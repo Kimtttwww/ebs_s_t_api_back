@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.eb_study.board.free.model.dto.ArgsBoardList;
 import com.eb_study.board.free.model.dto.BoardDelete;
 import com.eb_study.board.free.model.dto.BoardDetailSelect;
-import com.eb_study.board.free.model.dto.BoardSelect;
 import com.eb_study.board.free.model.dto.BoardUpdate;
 import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
@@ -56,13 +55,12 @@ public class FreeBoardController {
 	public ResponseEntity<ArgsBoardList> getBoardList(
 		@Parameter(required = false, description = "검색 조건, (Json)", allowEmptyValue = true)
 			@ModelAttribute InFreeBoardSearchOption ifbso) {
-		log.info(ifbso != null ? ifbso.toString() : "ifbso is null");
 		FreeBoardSearchOption option = mapper.toEntity(ifbso);
-//		TODO 손보기
-		option.setAllCount(service.getAllBoardCount(option));
 
-		log.info(option.toString());
-		return ResponseEntity.ok(new ArgsBoardList(option.getAllCount(), service.getBoardList(option)));
+		return ResponseEntity.ok(new ArgsBoardList(
+				service.getAllBoardCount(option),
+				service.getBoardList(option)
+				));
 	}
 
 	/**
