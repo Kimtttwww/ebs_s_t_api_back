@@ -73,7 +73,7 @@ public class FreeBoardDao {
 	 * @param a boardNo와 attachNo가 담긴 AttachNum
 	 * @return DB에서 가져온 파일 메타데이터 
 	 */
-	public AttachSelect getAttachs(AttachNum a) {
+	public AttachSelect getAttach(AttachNum a) {
 		return conn.selectOne(mapper + "getAttachs", a);
 	}
 
@@ -119,10 +119,10 @@ public class FreeBoardDao {
 	}
 
 	/**
-	 * 댓글 삭제
+	 * 게시글의 모든 댓글 삭제
 	 * @param boardNo 삭제할 댓글의 게시글 번호
 	 */
-	public void deleteReply(int boardNo) {
+	public void deleteAllReply(int boardNo) {
 		conn.delete(mapper + "deleteReply", boardNo);
 	}
 
@@ -141,7 +141,7 @@ public class FreeBoardDao {
 	 * @param a 첨부파일들
 	 * @throws SQLException 모든 첨부파일 업로드 실패
 	 */
-	public void insertAttachs(List<AttachSelect> a) throws SQLException {
+	public void insertAttachList(List<AttachSelect> a) throws SQLException {
 		boolean result = conn.insert(mapper + "insertAttachs", a) == a.size();
 		if (!result) throw new SQLException("모든 첨부파일 업로드 실패");
 	}

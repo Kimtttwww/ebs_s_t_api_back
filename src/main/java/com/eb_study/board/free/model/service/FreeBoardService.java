@@ -90,7 +90,7 @@ public class FreeBoardService {
 		if (exist && processor.uploadFileFilter(files)) {
 			List<AttachSelect> a = processor.multipartFileToAttachs(b.getBoardNo(), files);
 			try {
-				dao.insertAttachs(a);
+				dao.insertAttachList(a);
 			} catch (SQLException e) {	// 등록 실패시 업로드된 파일 제거
 				processor.fileRemove(a);
 				throw e;
@@ -130,11 +130,11 @@ public class FreeBoardService {
 	 * @throws SQLException 게시글 삭제 실패
 	 */
 	@Transactional(rollbackFor = Exception.class)
-	public void deleteBoard(BoardDelete b) throws Exception {
+	public void deleteBoard(BoardDelete b) throws IllegalArgumentException, SQLException {
 		if (!matchBoardPassword(b.getBoardNo(), b.getPassword()))
 			throw new IllegalArgumentException("비밀번호 불일치");
-		dao.deleteReply(b.getBoardNo());
 //		TODO 파일 삭제?
+		dao.deleteAllReply(b.getBoardNo());
 		dao.deleteBoard(b.getBoardNo());
 	}
 
