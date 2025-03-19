@@ -66,7 +66,7 @@ public class FileProcessor {
 	 * @param files 업로드 하고자 하는 파일들
 	 * @return 모든 파일의 유형과 image의 일치 여부
 	 */
-	public boolean uploadFileFilter(List<MultipartFile> a) {
+	public boolean uploadFileFilter(@NotNull List<MultipartFile> a) {
 		boolean valid = true;
 
 		for (Iterator<MultipartFile> iterator = a.iterator(); valid && iterator.hasNext();) {

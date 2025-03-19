@@ -95,7 +95,7 @@ public class FreeBoardController {
 	@GetMapping("boards/free/view/{boardNo}")
 	public ResponseEntity<BoardDetailSelect> getBoard(
 		@Parameter(description = "게시글번호")
-			@PathVariable("boardNo") int boardNo,
+			@PathVariable("boardNo") @Positive int boardNo,
 		@Parameter(description = "조회수 증가 여부, (URL Parameter)", examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
 			@RequestParam(name = "add") boolean doIncreaseViews) throws SQLException {
 		return ResponseEntity.ok(service.getBoard(boardNo, doIncreaseViews));
