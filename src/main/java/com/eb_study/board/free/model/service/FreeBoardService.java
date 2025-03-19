@@ -23,7 +23,6 @@ import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyInsert;
 import com.eb_study.common.FileProcessor;
-import com.eb_study.common.InputChecker;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -82,17 +81,13 @@ public class FreeBoardService {
 	 */
 	@Transactional(rollbackFor = Exception.class)
 	public int insertBoard(BoardInsert b, List<MultipartFile> files) throws SQLException, IllegalStateException, IOException {
-		boolean check = files != null && !files.isEmpty();
+		boolean exist = files != null && !files.isEmpty();
 
-		b.setPassword(new BCryptPasswordEncoder().encode(b.getPassword()));
-		b.setWriter(InputChecker.htmlEntityFilter(b.getWriter()));
-		b.setTitle(InputChecker.htmlEntityFilter(b.getTitle()));
-		b.setContent(InputChecker.htmlEntityFilter(b.getContent()));
-		b.setAttach(check);
+		b.setAttach(exist);
 		dao.insertBoard(b);
 
 		FileProcessor processor = new FileProcessor();
-		if (check && processor.uploadFileFilter(files)) {
+		if (exist && processor.uploadFileFilter(files)) {
 			List<AttachSelect> a = processor.multipartFileToAttachs(b.getBoardNo(), files);
 			try {
 				dao.insertAttachs(a);
@@ -115,9 +110,6 @@ public class FreeBoardService {
 	public int updateBoard(BoardUpdate b) throws IllegalArgumentException, SQLException {
 		if (!matchBoardPassword(b.getBoardNo(), b.getPassword()))
 			throw new IllegalArgumentException("비밀번호 불일치");
-// TODO setter
-		InputChecker.htmlEntityFilter(b.getTitle());
-		InputChecker.htmlEntityFilter(b.getContent());
 		dao.updateBoard(b);
 		return b.getBoardNo();
 	}
@@ -128,8 +120,6 @@ public class FreeBoardService {
 	 * @throws SQLException 댓글 등록 실패
 	 */
 	public void insertReply(ReplyInsert r) throws SQLException {
-// TODO setter
-		InputChecker.htmlEntityFilter(r.getContent());
 		dao.insertReply(r);
 	}
 

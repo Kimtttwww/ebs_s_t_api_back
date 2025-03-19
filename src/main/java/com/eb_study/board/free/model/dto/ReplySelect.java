@@ -9,10 +9,8 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@ToString
-public class ReplySelect {
-	@Schema(description = "댓글 내용", nullable = false)
-	private String content;
+@ToString(callSuper = true)
+public class ReplySelect extends ReplyContent {
 	@Schema(description = "댓글 작성일", nullable = false)
 	private Date created;
 }
