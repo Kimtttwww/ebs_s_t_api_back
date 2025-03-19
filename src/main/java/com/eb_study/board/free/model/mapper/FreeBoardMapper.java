@@ -6,7 +6,6 @@ import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueMappingStrategy;
 import org.mapstruct.ReportingPolicy;
-import org.mapstruct.factory.Mappers;
 
 import com.eb_study.board.free.model.dto.BoardInsert;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
@@ -23,7 +22,7 @@ public interface FreeBoardMapper {
 	FreeBoardSearchOption toEntity(InFreeBoardSearchOption ifbso);
 
 	BoardInsert toEntity(InBoardInsert b);
-	
+
 	@Deprecated
 	OutFreeBoardSearchOption toOutDTO(FreeBoardSearchOption fbso);
 

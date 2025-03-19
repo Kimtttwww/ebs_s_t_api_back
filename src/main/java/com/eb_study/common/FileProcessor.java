@@ -34,7 +34,7 @@ public class FileProcessor {
 	 * @param files 첨부파일들
 	 * @return 저장된 첨부파일 metadata들(attach)
 	 */
-	public List<AttachSelect> multipartFileToAttachs(int boardNo, @NotNull List<MultipartFile> files) throws IllegalStateException, IOException {
+	public List<AttachSelect> multipartFileToAttachs(int boardNo, @NotNull List<MultipartFile> files) throws IOException {
 		List<AttachSelect> list = null;
 
 		int i = 1;
@@ -60,21 +60,6 @@ public class FileProcessor {
 
 		return list;
 	}
-
-	/**
-	 * 첨부파일 rename policy
-	 * @param boardNo 등록할 게시글 번호
-	 * @param attachNo 첨부파일 번호
-	 * @return 저장용 첨부파일 이름
-	 */
-	private static String fileRenamePolicy(int boardNo, int attachNo) {
-		LocalDateTime now = LocalDateTime.now();
-		String date = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
-		int random = (int) (Math.random() * 90000 + 10000);
-
-		return String.format("%d_%d_%s_%d", boardNo, attachNo, date, random);
-	}
-
 
 	/**
 	 * 업로드하고자 하는 파일들의 유형 검사(image만 통과)
@@ -123,4 +108,18 @@ public class FileProcessor {
 		return new FileSystemResource(file);
 	}
 
+
+	/**
+	 * 첨부파일 rename policy
+	 * @param boardNo 등록할 게시글 번호
+	 * @param attachNo 첨부파일 번호
+	 * @return 저장용 첨부파일 이름
+	 */
+	private static String fileRenamePolicy(int boardNo, int attachNo) {
+		LocalDateTime now = LocalDateTime.now();
+		String date = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+		int random = (int) (Math.random() * 90000 + 10000);
+
+		return String.format("%d_%d_%s_%d", boardNo, attachNo, date, random);
+	}
 }

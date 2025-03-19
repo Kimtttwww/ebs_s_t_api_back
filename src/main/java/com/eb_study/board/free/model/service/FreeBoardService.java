@@ -25,6 +25,9 @@ import com.eb_study.board.free.model.dto.ReplyInsert;
 import com.eb_study.common.FileProcessor;
 import com.eb_study.common.InputChecker;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
 @Service
 public class FreeBoardService {
 	@Autowired
@@ -62,13 +65,10 @@ public class FreeBoardService {
 	 * @param boardNo 게시글 번호
 	 * @param doIncreaseViews 조회수 증가 사용 여부(게시글 조회용)
 	 * @return 게시글
-	 * @throws IllegalArgumentException 잘못된 요청
 	 * @throws SQLException 게시글 조회수 증가 실패
 	 */
-	public BoardDetailSelect getBoard(int boardNo, boolean doIncreaseViews) throws IllegalArgumentException, SQLException {
-		if (boardNo < 1) throw new IllegalArgumentException("잘못된 요청");
+	public BoardDetailSelect getBoard(int boardNo, boolean doIncreaseViews) throws SQLException {
 		if (doIncreaseViews) dao.increaseViews(boardNo);
-		
 		return dao.getBoard(boardNo);
 	}
 

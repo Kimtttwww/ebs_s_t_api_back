@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Schema(description = "게시글 목록 페이지 구성용 객체")
+@Schema(description = "게시글 목록 구성용 객체")
 @Getter
 @Setter
 @ToString

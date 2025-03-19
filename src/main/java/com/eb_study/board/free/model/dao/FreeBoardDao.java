@@ -122,7 +122,7 @@ public class FreeBoardDao {
 	 * 댓글 삭제
 	 * @param boardNo 삭제할 댓글의 게시글 번호
 	 */
-	public void deleteReply(int boardNo) throws Exception {
+	public void deleteReply(int boardNo) {
 		conn.delete(mapper + "deleteReply", boardNo);
 	}
 

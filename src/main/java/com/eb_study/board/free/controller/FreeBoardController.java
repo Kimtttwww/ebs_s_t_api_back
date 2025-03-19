@@ -88,49 +88,17 @@ public class FreeBoardController {
 	 * @param doIncreaseViews 조회수 증가 여부
 	 * @return 게시글
 	 * @throws SQLException 게시글 조회수 증가 실패
-	 * @throws IllegalArgumentException 잘못된 요청
 	 */
 	@Operation(summary = "게시글 조회", description = "단일 게시글 조회")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("boards/free/view/{boardNo}")
-//	TODO 파일 기능 구현 필요
 	public ResponseEntity<BoardDetailSelect> getBoard(
 		@Parameter(description = "게시글번호")
 			@PathVariable("boardNo") int boardNo,
 		@Parameter(description = "조회수 증가 여부, (URL Parameter)", examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
-			@RequestParam(name = "add") boolean doIncreaseViews) throws Exception {
+			@RequestParam(name = "add") boolean doIncreaseViews) throws SQLException {
 		return ResponseEntity.ok(service.getBoard(boardNo, doIncreaseViews));
-	}
-
-	/**
-	 * 게시글의 첨부파일 다운로드
-	 * @param boardNo 게시글 번호
-	 * @param attachNo 첨부파일 번호
-	 * @return 실제 첨부파일
-	 * @throws IOException
-	 * @throws NullPointerException 잘못된 입력으로 인한 파일 메타데이터 및 파일 조회 실패
-	 */
-	@Operation(summary = "게시글 조회", description = "단일 게시글 조회")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("boards/download/{boardNo}/{attachNo}")
-    public ResponseEntity<FileSystemResource> downloadAttach(
-			@Parameter(description = "게시글번호")
-	    		@PathVariable("boardNo") @Positive int boardNo,
-			@Parameter(description = "첨부파일번호")
-	    		@PathVariable("attachNo") @Positive int attachNo) throws IOException, NullPointerException {
-		AttachSelect a = service.getAttach(boardNo, attachNo);
-		FileSystemResource resource = service.getAttachResource(a);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s.%s\"", a.getFileOrigin(), a.getExt()));
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(resource.contentLength())
-                .body(resource);
 	}
 
 
@@ -139,7 +107,6 @@ public class FreeBoardController {
 	 * @param b 등록할 게시글
 	 * @return 등록된 게시글의 게시글 번호
 	 * @throws Exception 게시글 등록 실패
-	 * TODO 파일 구현 필요
 	 */
 	@Operation(summary = "게시글 등록", description = "새 게시글 등록")
 	@ApiResponse(responseCode = "200", description = "ok, 등록된 게시글 번호 반환")
@@ -208,8 +175,36 @@ public class FreeBoardController {
 	public ResponseEntity<?> deleteBoard(
 		@Parameter(description = "삭제할 게시글 내용, 유효성 검사 있음 (json)")
 			@RequestBody @Valid BoardDelete b) throws Exception {
-		log.info(b.toString());
 		service.deleteBoard(b);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * 게시글의 첨부파일 다운로드
+	 * @param boardNo 게시글 번호
+	 * @param attachNo 첨부파일 번호
+	 * @return 실제 첨부파일
+	 * @throws IOException
+	 */
+	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
+	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "500", description = "server error")
+	@GetMapping("boards/download/{boardNo}/{attachNo}")
+	public ResponseEntity<FileSystemResource> downloadAttach(
+			@Parameter(description = "게시글번호")
+			@PathVariable("boardNo") @Positive int boardNo,
+			@Parameter(description = "첨부파일번호")
+			@PathVariable("attachNo") @Positive int attachNo) throws IOException {
+		AttachSelect a = service.getAttach(boardNo, attachNo);
+		FileSystemResource resource = service.getAttachResource(a);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s.%s\"", a.getFileOrigin(), a.getExt()));
+
+		return ResponseEntity.ok()
+				.headers(headers)
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.contentLength(resource.contentLength())
+				.body(resource);
 	}
 }
