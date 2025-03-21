@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@Schema(description = "게시글의 댓글")
 @Getter
 @Setter
 @ToString(callSuper = true)

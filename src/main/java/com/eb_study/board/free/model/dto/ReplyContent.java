@@ -11,7 +11,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class ReplyContent {
+public abstract class ReplyContent {
 	@Schema(description = "댓글 내용", nullable = false)
 	@NotBlank @Length(min = 1)
 	private String content;

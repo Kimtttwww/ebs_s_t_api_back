@@ -15,7 +15,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class ArgsBoardList {
+public class OutBoardSelectList {
 	@Schema(description = "검색된 전체 게시글 수", nullable = false, minimum = "0")
 	private int allCount;
 	@Schema(description = "게시글 목록, 비어있을 수 있음", nullable = false)

@@ -27,11 +27,6 @@
 		JOIN CATEGORY USING(category_no)
 	</sql>
 
-	<resultMap type="boardDetailSelect" id="detailSelectMap" autoMapping="true">
-		<id property="boardNo" column="board_no"/>
-		<collection property="attachs" ofType="attachSelect" select="getAttachs" column="board_no" />
-	</resultMap>
-
 	<select id="getBoardList" parameterType="freeBoardSearchOption" resultType="boardSelect">
 		<include refid="joinBoardToCategoryPrefix" />
 			SELECT * FROM BOARD
@@ -45,7 +40,7 @@
 		SELECT * FROM CATEGORY
 	</select>
 
-	<select id="getBoard" parameterType="int" resultMap="detailSelectMap">
+	<select id="getBoard" parameterType="int" resultType="boardSelect">
 		<include refid="joinBoardToCategoryPrefix" />
 			SELECT * FROM BOARD
 			WHERE board_no = #{boardNo}
@@ -62,7 +57,7 @@
 		WHERE board_no = #{boardNo}
 	</select>
 
-	<select id="getAttachs" parameterType="attachNum" resultType="attachSelect">
+	<select id="getAttachs" parameterType="attachNum" resultType="attachMetadata">
 		SELECT * FROM ATTACH
 		<where>
 			AND board_no = #{boardNo}
@@ -114,4 +109,13 @@
 			(#{a.boardNo}, #{a.attachNo}, #{a.fileOrigin}, #{a.fileRename}, #{a.ext})
 		</foreach>
 	</insert>
+
+	<delete id="deleteAttachList" parameterType="list">
+		DELETE FROM ATTACH
+		WHERE attach_no IN <foreach collection="list" item="a" open="(" close=")" separator=",">
+			<bind name="boardNo" value="a.getBoardNo()"/>
+			#{a.attachNo}
+		</foreach> 
+		AND board_no = #{boardNo}
+	</delete>
 </mapper>

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,15 +17,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.eb_study.board.free.model.dto.ArgsBoardList;
-import com.eb_study.board.free.model.dto.AttachSelect;
+import com.eb_study.board.free.model.dto.AttachMetadata;
+import com.eb_study.board.free.model.dto.AttachNum;
 import com.eb_study.board.free.model.dto.BoardDelete;
-import com.eb_study.board.free.model.dto.BoardDetailSelect;
+import com.eb_study.board.free.model.dto.BoardSelect;
 import com.eb_study.board.free.model.dto.BoardUpdate;
 import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.InBoardInsert;
 import com.eb_study.board.free.model.dto.InFreeBoardSearchOption;
+import com.eb_study.board.free.model.dto.OutBoardSelectList;
 import com.eb_study.board.free.model.dto.ReplyInsert;
 import com.eb_study.board.free.model.mapper.FreeBoardMapper;
 import com.eb_study.board.free.model.service.FreeBoardService;
@@ -38,17 +38,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
-@Slf4j
 @Tag(name = "자유게시판 관련 API")
 @RestController
+@RequiredArgsConstructor
 public class FreeBoardController {
-	@Autowired
-	private FreeBoardService service;
+	private final FreeBoardService service;
 
-	@Autowired
-	private FreeBoardMapper mapper;
+	private final FreeBoardMapper mapper;
 
 	/**
 	 * 게시글 목록 조회 페이지
@@ -59,12 +57,12 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("boards/free/list")
-	public ResponseEntity<ArgsBoardList> getBoardList(
+	public ResponseEntity<OutBoardSelectList> getBoardList(
 		@Parameter(required = false, description = "검색 조건, (Json)", allowEmptyValue = true)
 			@ModelAttribute InFreeBoardSearchOption ifbso) {
 		FreeBoardSearchOption option = mapper.toEntity(ifbso);
 
-		return ResponseEntity.ok(new ArgsBoardList(
+		return ResponseEntity.ok(new OutBoardSelectList(
 				service.getAllBoardCount(option),
 				service.getBoardList(option)
 				));
@@ -93,7 +91,7 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("boards/free/view/{boardNo}")
-	public ResponseEntity<BoardDetailSelect> getBoard(
+	public ResponseEntity<BoardSelect> getBoard(
 		@Parameter(description = "게시글번호")
 			@PathVariable("boardNo") @Positive int boardNo,
 		@Parameter(description = "조회수 증가 여부, (URL Parameter)", examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
@@ -106,7 +104,7 @@ public class FreeBoardController {
 	 * 게시글 등록
 	 * @param b 등록할 게시글
 	 * @return 등록된 게시글의 게시글 번호
-	 * @throws Exception 게시글 등록 실패
+	 * @throws Exception 게시글 등록 실패 | ?
 	 */
 	@Operation(summary = "게시글 등록", description = "새 게시글 등록")
 	@ApiResponse(responseCode = "200", description = "ok, 등록된 게시글 번호 반환")
@@ -114,7 +112,7 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/free/write")
 	public ResponseEntity<Integer> insertBoard(
-		@Parameter(description = "작성할 게시글, 유효성 검사 있음 (json)")
+		@Parameter(description = "작성할 게시글, 유효성 검사 있음 (form)")
 			@ModelAttribute @Valid InBoardInsert b,
 		@Parameter(description = "작성할 게시글의 첨부파일")
 			@RequestParam(name = "attachs", required = false) List<MultipartFile> files) throws Exception {
@@ -124,10 +122,10 @@ public class FreeBoardController {
 	/**
 	 * 게시글 수정
 	 * @param b 수정할 게시글
+	 * @param files 새로 등록할 첨부파일들
 	 * @return 수정된 게시글의 게시글 번호
 	 * @throws IllegalArgumentException 비밀번호 불일치
-	 * @throws Exception 게시글 수정 실패
-	 * TODO 파일 구현 필요
+	 * @throws Exception 게시글 수정 실패 | 저장위치 사용 불가 | ?
 	 */
 	@Operation(summary = "게시글 수정", description = "게시글 내용 수정")
 	@ApiResponse(responseCode = "200", description = "ok")
@@ -135,9 +133,12 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/free/modify")
 	public ResponseEntity<Integer> updateBoard(
-		@Parameter(description = "수정할 게시글 내용, 유효성 검사 있음 (json)")
-			@RequestBody @Valid BoardUpdate b) throws Exception {
-		return ResponseEntity.ok(service.updateBoard(b));
+		@Parameter(description = "수정할 게시글 내용과 변경되지 않을 첨부파일들, 유효성 검사 있음 (form)")
+			@ModelAttribute @Valid BoardUpdate b,
+		@Parameter(description = "수정할 게시글 내용, 유효성 검사 있음 (json)", name = "newAttach")
+			@RequestParam(name = "newAttach", required = false) List<MultipartFile> files
+			) throws Exception {
+		return ResponseEntity.ok(service.updateBoard(mapper.toEntity(b), files));
 	}
 
 	/**
@@ -184,7 +185,7 @@ public class FreeBoardController {
 	 * @param boardNo 게시글 번호
 	 * @param attachNo 첨부파일 번호
 	 * @return 실제 첨부파일
-	 * @throws IOException
+	 * @throws IOException 저장위치 사용 불가 | ?
 	 */
 	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
 	@ApiResponse(responseCode = "200", description = "ok")
@@ -195,7 +196,7 @@ public class FreeBoardController {
 			@PathVariable("boardNo") @Positive int boardNo,
 			@Parameter(description = "첨부파일번호")
 			@PathVariable("attachNo") @Positive int attachNo) throws IOException {
-		AttachSelect a = service.getAttach(boardNo, attachNo);
+		AttachMetadata a = service.getAttach(new AttachNum(boardNo, attachNo));
 		FileSystemResource resource = service.getAttachResource(a);
 
 		HttpHeaders headers = new HttpHeaders();

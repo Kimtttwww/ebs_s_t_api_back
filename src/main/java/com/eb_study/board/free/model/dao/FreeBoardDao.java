@@ -2,14 +2,13 @@ package com.eb_study.board.free.model.dao;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.ibatis.session.SqlSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.eb_study.board.free.model.dto.AttachMetadata;
 import com.eb_study.board.free.model.dto.AttachNum;
-import com.eb_study.board.free.model.dto.AttachSelect;
-import com.eb_study.board.free.model.dto.BoardDetailSelect;
 import com.eb_study.board.free.model.dto.BoardInsert;
 import com.eb_study.board.free.model.dto.BoardSelect;
 import com.eb_study.board.free.model.dto.BoardUpdate;
@@ -17,10 +16,13 @@ import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyInsert;
 
+import lombok.RequiredArgsConstructor;
+
 @Repository
+@RequiredArgsConstructor
 public class FreeBoardDao {
-	@Autowired
-	private SqlSession conn;
+	private final SqlSession conn;
+
 	private final String mapper = "freeBoardMapper.";
 
 
@@ -46,7 +48,7 @@ public class FreeBoardDao {
 	 * @param boardNo 게시글 번호
 	 * @return 게시글
 	 */
-	public BoardDetailSelect getBoard(int boardNo) {
+	public Optional<BoardSelect> getBoard(int boardNo) {
 		return conn.selectOne(mapper + "getBoard", boardNo);
 	}
 
@@ -55,7 +57,7 @@ public class FreeBoardDao {
 	 * @param option 검색조건
 	 * @return 모든/검색되는 게시글 갯수
 	 */
-	public int getAllBoardCount(FreeBoardSearchOption option) {
+	public Optional<Integer> getAllBoardCount(FreeBoardSearchOption option) {
 		return conn.selectOne(mapper + "getAllBoardCount", option);
 	}
 
@@ -64,8 +66,8 @@ public class FreeBoardDao {
 	 * @param boardNo 조회할 게시글 번호
 	 * @return 게시글 비밀번호
 	 */
-	public String getBoardPassword(int boardNo) {
-		return conn.selectOne(mapper + "getBoardPassword", boardNo);
+	public Optional<String> getBoardPassword(int boardNo) {
+		return Optional.ofNullable(conn.selectOne(mapper + "getBoardPassword", boardNo));
 	}
 
 	/**
@@ -73,8 +75,17 @@ public class FreeBoardDao {
 	 * @param a boardNo와 attachNo가 담긴 AttachNum
 	 * @return DB에서 가져온 파일 메타데이터 
 	 */
-	public AttachSelect getAttach(AttachNum a) {
+	public AttachMetadata getAttach(AttachNum a) {
 		return conn.selectOne(mapper + "getAttachs", a);
+	}
+
+	/**
+	 * 모든 첨부파일 조회
+	 * @param boardNo 게시글 번호
+	 * @return DB에서 가져온 파일 메타데이터들
+	 */
+	public List<AttachMetadata> getAllAttachFromBoard(int boardNo) {
+		return conn.selectList(mapper + "getAttachs", new AttachNum(boardNo, 0));
 	}
 
 
@@ -139,12 +150,21 @@ public class FreeBoardDao {
 	/**
 	 * 등록할 게시글의 첨부파일들 등록
 	 * @param a 첨부파일들
-	 * @throws SQLException 모든 첨부파일 업로드 실패
+	 * @throws SQLException 주어진 첨부파일 전부/일부 업로드 실패
 	 */
-	public void insertAttachList(List<AttachSelect> a) throws SQLException {
+	public void insertAttachList(List<AttachMetadata> a) throws SQLException {
 		boolean result = conn.insert(mapper + "insertAttachs", a) == a.size();
-		if (!result) throw new SQLException("모든 첨부파일 업로드 실패");
+		if (!result) throw new SQLException("주어진 첨부파일 전부/일부 업로드 실패");
 	}
 
 //	파일 삭제 구현 필요
+
+	/**
+	 * @param a 삭제할 첨부파일 목록
+	 * @throws SQLException 주어진 첨부파일들 전부/일부 삭제 실패
+	 */
+	public void deleteAttachList(List<AttachNum> a) throws SQLException {
+		boolean result = conn.delete(mapper + "deleteAttachList", a) == a.size();
+		if (!result) throw new SQLException("주어진 첨부파일들 전부/일부 삭제 실패");
+	}
 }

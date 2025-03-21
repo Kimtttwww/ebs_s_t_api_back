@@ -8,12 +8,14 @@ import org.mapstruct.NullValueMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.eb_study.board.free.model.dto.AttachMetadata;
 import com.eb_study.board.free.model.dto.BoardContent;
 import com.eb_study.board.free.model.dto.BoardInsert;
 import com.eb_study.board.free.model.dto.BoardUpdate;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.InBoardInsert;
 import com.eb_study.board.free.model.dto.InFreeBoardSearchOption;
+import com.eb_study.board.free.model.dto.OutAttach;
 import com.eb_study.board.free.model.dto.OutFreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyContent;
 import com.eb_study.board.free.model.dto.ReplyInsert;
@@ -35,6 +37,8 @@ public interface FreeBoardMapper {
 
 	@Deprecated
 	OutFreeBoardSearchOption toOutDTO(FreeBoardSearchOption fbso);
+
+	OutAttach toOutDTO(AttachMetadata a);
 
 	@AfterMapping
 	default void fbsoAfter(@MappingTarget FreeBoardSearchOption fbso) {

@@ -1,8 +1,11 @@
 package com.eb_study.board.free.model.dto;
 
+import java.util.List;
+
 import org.hibernate.validator.constraints.Length;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -23,7 +26,6 @@ public class BoardUpdate extends BoardContent {
 	@NotBlank @Length(min = 4, max = 15) @Pattern(regexp = "^.[a-zA-Z0-9!@#$%^&*]{4,15}$")
 	private String password;
 
-//	TODO 파일 구현 필요
-	@Schema(hidden = true)
-	private boolean attach;
+	@Schema(description = "수정하지 않고 남길 기존의 첨부파일", requiredMode = RequiredMode.NOT_REQUIRED)
+	private List<AttachNum> attach;
 }
