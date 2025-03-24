@@ -98,7 +98,7 @@ public class FreeBoardService {
 	 * @param b 수정할 게시글
 	 * @param files 새로 등록할 첨부파일들
 	 * @return 수정된 게시글의 게시글 번호
-	 * @throws IllegalArgumentException 비밀번호 불일치
+	 * @throws IllegalArgumentException 비밀번호 불일치 | ?
 	 * @throws IOException 저장위치 사용 불가 | ?
 	 * @throws SQLException 게시글 수정 실패
 	 */
@@ -132,9 +132,13 @@ public class FreeBoardService {
 	public void deleteBoard(BoardDelete b) throws IllegalArgumentException, SQLException {
 		if (!matchBoardPassword(b.getBoardNo(), b.getPassword()))
 			throw new IllegalArgumentException("비밀번호 불일치");
-//		TODO 파일 삭제?
+		List<AttachMetadata> a = dao.getAllAttachFromBoard(b.getBoardNo());
+
 		dao.deleteAllReply(b.getBoardNo());
+		dao.deleteAllAttach(b.getBoardNo());
 		dao.deleteBoard(b.getBoardNo());
+
+		processor.fileRemove(a);
 	}
 
 	/**
@@ -187,7 +191,7 @@ public class FreeBoardService {
 	 * @param boardNo 게시글 번호
 	 * @param afterAttach 수정하지 않고 남길 기존의 첨부파일
 	 * @param files 새로 등록할 첨부파일들
-	 * @throws IOException 저장위치 사용 불가
+	 * @throws IOException 저장위치 사용 불가 | ?
 	 * @throws SQLException 주어진 첨부파일들 전부/일부 삭제 실패
 	 */
 	private void updateAttach(int boardNo, List<AttachNum> afterAttach, List<MultipartFile> files) throws IOException, SQLException {

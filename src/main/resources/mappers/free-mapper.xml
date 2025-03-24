@@ -110,6 +110,11 @@
 		</foreach>
 	</insert>
 
+	<delete id="deleteAttachs" parameterType="int">
+		DELETE FROM ATTACH
+		WHERE board_no = #{boardNo}
+	</delete>
+
 	<delete id="deleteAttachList" parameterType="list">
 		DELETE FROM ATTACH
 		WHERE attach_no IN <foreach collection="list" item="a" open="(" close=")" separator=",">

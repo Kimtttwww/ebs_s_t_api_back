@@ -99,6 +99,35 @@ public class FreeBoardController {
 		return ResponseEntity.ok(service.getBoard(boardNo, doIncreaseViews));
 	}
 
+	/**
+	 * 게시글의 첨부파일 다운로드
+	 * @param boardNo 게시글 번호
+	 * @param attachNo 첨부파일 번호
+	 * @return 실제 첨부파일
+	 * @throws IOException 저장위치 사용 불가 | ?
+	 */
+	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
+	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "500", description = "server error")
+	@GetMapping("boards/download/{boardNo}/{attachNo}")
+	public ResponseEntity<FileSystemResource> downloadAttach(
+			@Parameter(description = "게시글번호")
+			@PathVariable("boardNo") @Positive int boardNo,
+			@Parameter(description = "첨부파일번호")
+			@PathVariable("attachNo") @Positive int attachNo) throws IOException {
+		AttachMetadata a = service.getAttach(new AttachNum(boardNo, attachNo));
+		FileSystemResource resource = service.getAttachResource(a);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s.%s\"", a.getFileOrigin(), a.getExt()));
+
+		return ResponseEntity.ok()
+				.headers(headers)
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.contentLength(resource.contentLength())
+				.body(resource);
+	}
+
 
 	/**
 	 * 게시글 등록
@@ -124,7 +153,7 @@ public class FreeBoardController {
 	 * @param b 수정할 게시글
 	 * @param files 새로 등록할 첨부파일들
 	 * @return 수정된 게시글의 게시글 번호
-	 * @throws IllegalArgumentException 비밀번호 불일치
+	 * @throws IllegalArgumentException 비밀번호 불일치 | ?
 	 * @throws Exception 게시글 수정 실패 | 저장위치 사용 불가 | ?
 	 */
 	@Operation(summary = "게시글 수정", description = "게시글 내용 수정")
@@ -164,9 +193,7 @@ public class FreeBoardController {
 	 * @param password 비밀번호
 	 * @return 게시글 + 연?관된 댓글 삭제 여부
 	 * @throws IllegalArgumentException 비밀번호 불일치
-	 * @throws SQLException 게시글 | 연관 댓글 삭제 실패
-	 * TODO 파일 구현 필요
-	 * TODO 파일 구현 후 검증 필요
+	 * @throws SQLException 게시글
 	 */
 	@Operation(summary = "게시글 삭제", description = "게시글 및 연관된 댓글 삭제")
 	@ApiResponse(responseCode = "204", description = "ok")
@@ -178,34 +205,5 @@ public class FreeBoardController {
 			@RequestBody @Valid BoardDelete b) throws Exception {
 		service.deleteBoard(b);
 		return ResponseEntity.noContent().build();
-	}
-
-	/**
-	 * 게시글의 첨부파일 다운로드
-	 * @param boardNo 게시글 번호
-	 * @param attachNo 첨부파일 번호
-	 * @return 실제 첨부파일
-	 * @throws IOException 저장위치 사용 불가 | ?
-	 */
-	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("boards/download/{boardNo}/{attachNo}")
-	public ResponseEntity<FileSystemResource> downloadAttach(
-			@Parameter(description = "게시글번호")
-			@PathVariable("boardNo") @Positive int boardNo,
-			@Parameter(description = "첨부파일번호")
-			@PathVariable("attachNo") @Positive int attachNo) throws IOException {
-		AttachMetadata a = service.getAttach(new AttachNum(boardNo, attachNo));
-		FileSystemResource resource = service.getAttachResource(a);
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s.%s\"", a.getFileOrigin(), a.getExt()));
-
-		return ResponseEntity.ok()
-				.headers(headers)
-				.contentType(MediaType.APPLICATION_OCTET_STREAM)
-				.contentLength(resource.contentLength())
-				.body(resource);
 	}
 }

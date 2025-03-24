@@ -104,8 +104,8 @@ public class FileProcessor {
 	 * 파일 저장
 	 * @param files 업로드 할 파일들
 	 * @param a 업로드 할 파일의 메타데이터
-	 * @throws IOException 
-	 * @throws IllegalStateException 
+	 * @throws IOException ?
+	 * @throws IllegalStateException ?
 	 * @apiNote a는 files의 요소들과 순서를 필히 유지해야 한다.
 	 */
 	public void fileSave(@NotNull List<MultipartFile> files, @NotNull List<AttachMetadata> a) throws IllegalStateException, IOException {

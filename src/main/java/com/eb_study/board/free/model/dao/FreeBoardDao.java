@@ -157,7 +157,13 @@ public class FreeBoardDao {
 		if (!result) throw new SQLException("주어진 첨부파일 전부/일부 업로드 실패");
 	}
 
-//	파일 삭제 구현 필요
+	/**
+	 * 모든 첨부파일 삭제
+	 * @param boardNo 삭제할 첨부파일의 게시글 번호
+	 */
+	public void deleteAllAttach(int boardNo) {
+		conn.delete(mapper + "deleteAttachs", boardNo);
+	}
 
 	/**
 	 * @param a 삭제할 첨부파일 목록
