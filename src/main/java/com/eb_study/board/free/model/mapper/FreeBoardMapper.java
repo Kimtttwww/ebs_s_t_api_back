@@ -16,7 +16,6 @@ import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.InBoardInsert;
 import com.eb_study.board.free.model.dto.InFreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.OutAttach;
-import com.eb_study.board.free.model.dto.OutFreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyContent;
 import com.eb_study.board.free.model.dto.ReplyInsert;
 import com.eb_study.common.InputChecker;
@@ -35,10 +34,8 @@ public interface FreeBoardMapper {
 
 	ReplyInsert toEntity(ReplyInsert b);
 
-	@Deprecated
-	OutFreeBoardSearchOption toOutDTO(FreeBoardSearchOption fbso);
-
 	OutAttach toOutDTO(AttachMetadata a);
+
 
 	@AfterMapping
 	default void fbsoAfter(@MappingTarget FreeBoardSearchOption fbso) {

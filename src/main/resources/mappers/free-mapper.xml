@@ -4,9 +4,11 @@
 
 	<sql id="listFLFOption">
 		<where>
-			<if test='startDate neq null and endDate neq null'>
-	 			AND #{startDate} &lt;= created AND
-	 			created &lt; STR_TO_DATE(#{endDate}, '%Y-%m-%d') + 1
+			<if test='startDate neq null'>
+	 			AND created &gt;= #{startDate}
+			</if>
+			<if test='endDate neq null'>
+	 			AND created &lt; STR_TO_DATE(#{endDate}, '%Y-%m-%d') + 1
 			</if>
 			<if test='category gt 0'>
 				AND category_no = #{category}
@@ -67,6 +69,7 @@
 		</where>
 		ORDER BY attach_no
 	</select>
+
 
 	<update id="increaseViews" parameterType="int">
 		UPDATE BOARD

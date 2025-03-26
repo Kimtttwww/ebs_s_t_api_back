@@ -49,7 +49,7 @@ public class FreeBoardDao {
 	 * @return 게시글
 	 */
 	public Optional<BoardSelect> getBoard(int boardNo) {
-		return conn.selectOne(mapper + "getBoard", boardNo);
+		return Optional.ofNullable(conn.selectOne(mapper + "getBoard", boardNo));
 	}
 
 	/**
@@ -58,7 +58,7 @@ public class FreeBoardDao {
 	 * @return 모든/검색되는 게시글 갯수
 	 */
 	public Optional<Integer> getAllBoardCount(FreeBoardSearchOption option) {
-		return conn.selectOne(mapper + "getAllBoardCount", option);
+		return Optional.ofNullable(conn.selectOne(mapper + "getAllBoardCount", option));
 	}
 
 	/**
@@ -75,16 +75,16 @@ public class FreeBoardDao {
 	 * @param a boardNo와 attachNo가 담긴 AttachNum
 	 * @return DB에서 가져온 파일 메타데이터 
 	 */
-	public AttachMetadata getAttach(AttachNum a) {
-		return conn.selectOne(mapper + "getAttachs", a);
+	public Optional<AttachMetadata> getAttach(AttachNum a) {
+		return Optional.ofNullable(conn.selectOne(mapper + "getAttachs", a));
 	}
 
 	/**
-	 * 모든 첨부파일 조회
+	 * 첨부파일 목록 조회
 	 * @param boardNo 게시글 번호
 	 * @return DB에서 가져온 파일 메타데이터들
 	 */
-	public List<AttachMetadata> getAllAttachFromBoard(int boardNo) {
+	public List<AttachMetadata> getAttachList(int boardNo) {
 		return conn.selectList(mapper + "getAttachs", new AttachNum(boardNo, 0));
 	}
 

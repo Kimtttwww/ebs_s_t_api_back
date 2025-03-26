@@ -26,10 +26,10 @@ public class InFreeBoardSearchOption {
 	@Schema(description = "현재 페이지", requiredMode = RequiredMode.NOT_REQUIRED, defaultValue = "1")
 	int currentPage;
 
-	
+
 	public InFreeBoardSearchOption() {
 		super();
-		this.perPage = 5;
+		this.perPage = 10;
 		this.currentPage = 1;
 	}
 }

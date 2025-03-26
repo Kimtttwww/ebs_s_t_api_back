@@ -51,7 +51,7 @@ public class FreeBoardService {
 	 * @return 전체 게시글 수
 	 */
 	public int getAllBoardCount(FreeBoardSearchOption option) {
-		return dao.getAllBoardCount(option).get();
+		return dao.getAllBoardCount(option).orElse(0);
 	}
 
 	/**
@@ -69,10 +69,11 @@ public class FreeBoardService {
 	 * @return 게시글
 	 * @throws SQLException 게시글 조회수 증가 실패
 	 */
-	public BoardSelect getBoard(int boardNo, boolean doIncreaseViews) throws SQLException {
+	public Optional<BoardSelect> getBoard(int boardNo, boolean doIncreaseViews) throws SQLException {
 		if (doIncreaseViews) dao.increaseViews(boardNo);
-		return dao.getBoard(boardNo).get();
+		return dao.getBoard(boardNo);
 	}
+
 
 	/**
 	 * 게시글 등록
@@ -132,7 +133,7 @@ public class FreeBoardService {
 	public void deleteBoard(BoardDelete b) throws IllegalArgumentException, SQLException {
 		if (!matchBoardPassword(b.getBoardNo(), b.getPassword()))
 			throw new IllegalArgumentException("비밀번호 불일치");
-		List<AttachMetadata> a = dao.getAllAttachFromBoard(b.getBoardNo());
+		List<AttachMetadata> a = dao.getAttachList(b.getBoardNo());
 
 		dao.deleteAllReply(b.getBoardNo());
 		dao.deleteAllAttach(b.getBoardNo());
@@ -147,7 +148,7 @@ public class FreeBoardService {
 	 * @param attachNo 첨부파일 번호
 	 * @return 파일 메타데이터
 	 */
-	public AttachMetadata getAttach(AttachNum a) {
+	public Optional<AttachMetadata> getAttach(AttachNum a) {
 		return dao.getAttach(a);
 	}
 
@@ -184,7 +185,7 @@ public class FreeBoardService {
 	 * @return 비밀번호 일치 여부
 	 */	// TODO ? 인자 검증은 누구의 역할인가?
 	public boolean matchBoardPassword(int boardNo, @NotEmpty String password) {
-		return new BCryptPasswordEncoder().matches(password, dao.getBoardPassword(boardNo).get());
+		return new BCryptPasswordEncoder().matches(password, dao.getBoardPassword(boardNo).orElse(""));
 	}
 
 	/**
@@ -195,7 +196,7 @@ public class FreeBoardService {
 	 * @throws SQLException 주어진 첨부파일들 전부/일부 삭제 실패
 	 */
 	private void updateAttach(int boardNo, List<AttachNum> afterAttach, List<MultipartFile> files) throws IOException, SQLException {
-		List<AttachMetadata> beforeAttach = dao.getAllAttachFromBoard(boardNo);
+		List<AttachMetadata> beforeAttach = dao.getAttachList(boardNo);
 		boolean beforeHasSomething = beforeAttach != null && !beforeAttach.isEmpty(),
 		afterHasSomething = afterAttach != null && !afterAttach.isEmpty(),
 		filesHasSomething = files != null && !files.isEmpty();

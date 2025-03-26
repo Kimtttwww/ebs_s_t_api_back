@@ -1,6 +1,7 @@
 package com.eb_study.board.free.controller;
 
 import java.io.IOException;
+import java.rmi.NoSuchObjectException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -56,9 +57,9 @@ public class FreeBoardController {
 	@Operation(summary = "게시글 목록 조회", description = "게시글 목록 조회 페이지")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("boards/free/list")
+	@GetMapping("board/free")
 	public ResponseEntity<OutBoardSelectList> getBoardList(
-		@Parameter(required = false, description = "검색 조건, (Json)", allowEmptyValue = true)
+		@Parameter(description = "검색 조건, (Json)", required = false, allowEmptyValue = true)
 			@ModelAttribute InFreeBoardSearchOption ifbso) {
 		FreeBoardSearchOption option = mapper.toEntity(ifbso);
 
@@ -75,7 +76,7 @@ public class FreeBoardController {
 	@Operation(summary = "카테고리 목록 조회", description = "게시글 유형 목록 조회 페이지")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("boards/free/category")
+	@GetMapping("board/free/category")
 	public ResponseEntity<List<Category>> getCategoryList() {
 		return ResponseEntity.ok(service.getCategoryList());
 	}
@@ -90,13 +91,14 @@ public class FreeBoardController {
 	@Operation(summary = "게시글 조회", description = "단일 게시글 조회")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("boards/free/view/{boardNo}")
+	@GetMapping("board/free/{boardNo}")
 	public ResponseEntity<BoardSelect> getBoard(
-		@Parameter(description = "게시글번호")
+		@Parameter(description = "게시글번호", required = true)
 			@PathVariable("boardNo") @Positive int boardNo,
-		@Parameter(description = "조회수 증가 여부, (URL Parameter)", examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
-			@RequestParam(name = "add") boolean doIncreaseViews) throws SQLException {
-		return ResponseEntity.ok(service.getBoard(boardNo, doIncreaseViews));
+		@Parameter(description = "조회수 증가 여부, (URL Parameter)", required = false, examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
+			@RequestParam(name = "add", required = false) boolean doIncreaseViews
+			) throws SQLException {
+		return ResponseEntity.ofNullable(service.getBoard(boardNo, doIncreaseViews).orElse(null));
 	}
 
 	/**
@@ -104,18 +106,19 @@ public class FreeBoardController {
 	 * @param boardNo 게시글 번호
 	 * @param attachNo 첨부파일 번호
 	 * @return 실제 첨부파일
-	 * @throws IOException 저장위치 사용 불가 | ?
+	 * @throws IOException 저장위치 사용 불가 | 해당 첨부파일 없음 | ?
 	 */
 	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("boards/download/{boardNo}/{attachNo}")
+	@GetMapping("board/download/{boardNo}/{attachNo}")
 	public ResponseEntity<FileSystemResource> downloadAttach(
-			@Parameter(description = "게시글번호")
+		@Parameter(description = "게시글번호", required = true)
 			@PathVariable("boardNo") @Positive int boardNo,
-			@Parameter(description = "첨부파일번호")
-			@PathVariable("attachNo") @Positive int attachNo) throws IOException {
-		AttachMetadata a = service.getAttach(new AttachNum(boardNo, attachNo));
+		@Parameter(description = "첨부파일번호", required = true)
+			@PathVariable("attachNo") @Positive int attachNo
+			) throws IOException {
+		AttachMetadata a = service.getAttach(new AttachNum(boardNo, attachNo)).orElseThrow(() -> new NoSuchObjectException("해당 첨부파일 없음"));
 		FileSystemResource resource = service.getAttachResource(a);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -141,11 +144,12 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/free/write")
 	public ResponseEntity<Integer> insertBoard(
-		@Parameter(description = "작성할 게시글, 유효성 검사 있음 (form)")
+		@Parameter(description = "작성할 게시글, 유효성 검사 있음 (form)", required = true)
 			@ModelAttribute @Valid InBoardInsert b,
-		@Parameter(description = "작성할 게시글의 첨부파일")
-			@RequestParam(name = "attachs", required = false) List<MultipartFile> files) throws Exception {
-		return ResponseEntity.ok(service.insertBoard(mapper.toEntity(b), files));
+		@Parameter(description = "작성할 게시글의 첨부파일", required = false)
+			@RequestParam(name = "attachs", required = false) List<MultipartFile> files
+			) throws Exception {
+		return ResponseEntity.ofNullable(service.insertBoard(mapper.toEntity(b), files));
 	}
 
 	/**
@@ -162,9 +166,9 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/free/modify")
 	public ResponseEntity<Integer> updateBoard(
-		@Parameter(description = "수정할 게시글 내용과 변경되지 않을 첨부파일들, 유효성 검사 있음 (form)")
+		@Parameter(description = "수정할 게시글 내용과 변경되지 않을 첨부파일들, 유효성 검사 있음 (form)", required = true)
 			@ModelAttribute @Valid BoardUpdate b,
-		@Parameter(description = "수정할 게시글 내용, 유효성 검사 있음 (json)", name = "newAttach")
+		@Parameter(description = "수정할 게시글 내용", name = "newAttach", required = false)
 			@RequestParam(name = "newAttach", required = false) List<MultipartFile> files
 			) throws Exception {
 		return ResponseEntity.ok(service.updateBoard(mapper.toEntity(b), files));
@@ -181,8 +185,9 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/reply")
 	public ResponseEntity<?> insertReply(
-		@Parameter(description = "등록할 댓글 내용, 유효성 검사 있음 (json)")
-			@RequestBody @Valid ReplyInsert r) throws Exception {
+		@Parameter(description = "등록할 댓글 내용, 유효성 검사 있음 (json)", required = true)
+			@RequestBody @Valid ReplyInsert r
+			) throws Exception {
 		service.insertReply(r);
 		return ResponseEntity.noContent().build();
 	}
@@ -201,8 +206,9 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/free/remove")
 	public ResponseEntity<?> deleteBoard(
-		@Parameter(description = "삭제할 게시글 내용, 유효성 검사 있음 (json)")
-			@RequestBody @Valid BoardDelete b) throws Exception {
+		@Parameter(description = "삭제할 게시글 내용, 유효성 검사 있음 (json)", required = true)
+			@RequestBody @Valid BoardDelete b
+			) throws Exception {
 		service.deleteBoard(b);
 		return ResponseEntity.noContent().build();
 	}
