@@ -22,6 +22,7 @@ import com.eb_study.board.free.model.dto.BoardUpdate;
 import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyInsert;
+import com.eb_study.board.free.model.dto.ReplySelect;
 import com.eb_study.common.FileProcessor;
 
 import jakarta.validation.constraints.NotEmpty;
@@ -72,6 +73,24 @@ public class FreeBoardService {
 	public Optional<BoardSelect> getBoard(int boardNo, boolean doIncreaseViews) throws SQLException {
 		if (doIncreaseViews) dao.increaseViews(boardNo);
 		return dao.getBoard(boardNo);
+	}
+
+	/**
+	 * 첨부파일 목록 조회
+	 * @param boardNo 게시글 번호
+	 * @return 첨부파일 목록
+	 */
+	public List<AttachMetadata> getAttachList(int boardNo) {
+		return dao.getAttachList(boardNo);
+	}
+
+	/**
+	 * 댓글 목록 조회
+	 * @param boardNo 게시글 번호
+	 * @return 댓글 목록
+	 */
+	public List<ReplySelect> getReplyList(int boardNo) {
+		return dao.getReplyList(boardNo);
 	}
 
 

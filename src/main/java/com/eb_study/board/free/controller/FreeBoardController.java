@@ -27,8 +27,10 @@ import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.InBoardInsert;
 import com.eb_study.board.free.model.dto.InFreeBoardSearchOption;
+import com.eb_study.board.free.model.dto.OutAttach;
 import com.eb_study.board.free.model.dto.OutBoardSelectList;
 import com.eb_study.board.free.model.dto.ReplyInsert;
+import com.eb_study.board.free.model.dto.ReplySelect;
 import com.eb_study.board.free.model.mapper.FreeBoardMapper;
 import com.eb_study.board.free.model.service.FreeBoardService;
 
@@ -131,6 +133,36 @@ public class FreeBoardController {
 				.body(resource);
 	}
 
+	/**
+	 * 첨부파일 목록 조회
+	 * @param boardNo 게시글 번호
+	 * @return 첨부파일 목록
+	 */
+	@Operation(summary = "첨부파일 목록 조회", description = "게시글의 첨부파일 목록 조회")
+	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "500", description = "server error", useReturnTypeSchema = false)
+	@GetMapping("board/attach")
+	public ResponseEntity<List<OutAttach>> getAttachList(
+		@Parameter(description = "첨부파일이 있을 게시글 번호", required = true)
+			@RequestParam("boardNo") @Positive int boardNo) {
+		return ResponseEntity.ofNullable(mapper.toOutDTO(service.getAttachList(boardNo)));
+	}
+
+	/**
+	 * 댓글 목록 조회
+	 * @param boardNo 게시글 번호
+	 * @return 댓글 목록
+	 */
+	@Operation(summary = "댓글 목록 조회", description = "게시글의 댓글 목록 조회")
+	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "500", description = "server error")
+	@GetMapping("board/repley")
+	public ResponseEntity<List<ReplySelect>> getReplyList(
+		@Parameter(description = "댓글이 있을 게시글 번호", required = true)
+			@RequestParam("boardNo") @Positive int boardNo) {
+		return ResponseEntity.ofNullable(service.getReplyList(boardNo));
+	}
+
 
 	/**
 	 * 게시글 등록
@@ -180,16 +212,16 @@ public class FreeBoardController {
 	 * @throws SQLException 댓글 등록 실패
 	 */
 	@Operation(summary = "댓글 등록", description = "게시글의 댓글 등록")
-	@ApiResponse(responseCode = "204", description = "ok")
+	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
 	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/reply")
-	public ResponseEntity<?> insertReply(
+	public ResponseEntity<List<ReplySelect>> insertReply(
 		@Parameter(description = "등록할 댓글 내용, 유효성 검사 있음 (json)", required = true)
 			@RequestBody @Valid ReplyInsert r
 			) throws Exception {
 		service.insertReply(r);
-		return ResponseEntity.noContent().build();
+		return getReplyList(r.getBoardNo());
 	}
 
 	/**

@@ -1,7 +1,10 @@
 package com.eb_study.board.free.model.mapper;
 
+import java.util.List;
+
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueMappingStrategy;
@@ -34,7 +37,10 @@ public interface FreeBoardMapper {
 
 	ReplyInsert toEntity(ReplyInsert b);
 
+	@Mapping(target = "fileName", expression = "java(a != null ? String.format(\"%s.%s\", a.getFileOrigin(), a.getExt()) : \"\")")
 	OutAttach toOutDTO(AttachMetadata a);
+
+	List<OutAttach> toOutDTO(List<AttachMetadata> a);
 
 
 	@AfterMapping

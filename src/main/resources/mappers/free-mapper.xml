@@ -70,6 +70,12 @@
 		ORDER BY attach_no
 	</select>
 
+	<select id="getReplyList" parameterType="int" resultType="replySelect">
+		SELECT * FROM REPLY
+		WHERE board_no = #{boardNo}
+		ORDER BY created
+	</select>
+
 
 	<update id="increaseViews" parameterType="int">
 		UPDATE BOARD

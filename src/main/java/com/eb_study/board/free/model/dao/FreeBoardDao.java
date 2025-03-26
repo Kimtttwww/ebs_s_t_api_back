@@ -15,6 +15,7 @@ import com.eb_study.board.free.model.dto.BoardUpdate;
 import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyInsert;
+import com.eb_study.board.free.model.dto.ReplySelect;
 
 import lombok.RequiredArgsConstructor;
 
@@ -86,6 +87,15 @@ public class FreeBoardDao {
 	 */
 	public List<AttachMetadata> getAttachList(int boardNo) {
 		return conn.selectList(mapper + "getAttachs", new AttachNum(boardNo, 0));
+	}
+
+	/**
+	 * 댓글 목록 조회
+	 * @param boardNo 게시글 번호
+	 * @return 댓글 목록
+	 */
+	public List<ReplySelect> getReplyList(int boardNo) {
+		return conn.selectList(mapper + "getReplyList", boardNo);
 	}
 
 

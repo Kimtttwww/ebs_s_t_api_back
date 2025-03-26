@@ -11,9 +11,5 @@ public record OutAttach (
 		int attachNo,
 
 		@Schema(description = "업로드 당시 파일명")
-		String fileOrigin,
-
-		@Schema(description = "파일 확장자", examples = {"jpg", "png", "gif"})
-		String ext
-
+		String fileName
 ) {}
