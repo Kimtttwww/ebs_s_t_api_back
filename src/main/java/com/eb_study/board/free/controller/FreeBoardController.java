@@ -156,7 +156,7 @@ public class FreeBoardController {
 	@Operation(summary = "댓글 목록 조회", description = "게시글의 댓글 목록 조회")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("board/repley")
+	@GetMapping("board/reply")
 	public ResponseEntity<List<ReplySelect>> getReplyList(
 		@Parameter(description = "댓글이 있을 게시글 번호", required = true)
 			@RequestParam("boardNo") @Positive int boardNo) {
@@ -225,12 +225,12 @@ public class FreeBoardController {
 	}
 
 	/**
-	 * 게시글 + 연?관된 댓글 삭제
+	 * 게시글 + 댓글 + 첨부파일 삭제
 	 * @param boardNo 게시글 번호
 	 * @param password 비밀번호
-	 * @return 게시글 + 연?관된 댓글 삭제 여부
+	 * @return 게시글 + 댓글 + 첨부파일 삭제 여부
 	 * @throws IllegalArgumentException 비밀번호 불일치
-	 * @throws SQLException 게시글
+	 * @throws SQLException 게시글 삭제 실패
 	 */
 	@Operation(summary = "게시글 삭제", description = "게시글 및 연관된 댓글 삭제")
 	@ApiResponse(responseCode = "204", description = "ok")

@@ -143,7 +143,7 @@ public class FreeBoardService {
 	}
 
 	/**
-	 * 게시글 및 연관 댓글 삭제
+	 * 게시글 및 댓글 및 첨부파일 삭제
 	 * @param b 삭제할 게시글
 	 * @throws IllegalArgumentException 비밀번호 불일치
 	 * @throws SQLException 게시글 삭제 실패
