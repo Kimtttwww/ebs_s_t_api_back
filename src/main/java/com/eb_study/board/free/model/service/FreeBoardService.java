@@ -1,8 +1,6 @@
 package com.eb_study.board.free.model.service;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,10 +21,9 @@ import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyInsert;
 import com.eb_study.board.free.model.dto.ReplySelect;
-import com.eb_study.common.FileProcessor;
+import com.eb_study.file.FileManager;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -34,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class FreeBoardService {
 	private final FreeBoardDao dao;
 
-	private final FileProcessor processor;
+	private final FileManager fileManager;
 
 
 	/**
@@ -52,7 +49,7 @@ public class FreeBoardService {
 	 * @return 전체 게시글 수
 	 */
 	public int getAllBoardCount(FreeBoardSearchOption option) {
-		return dao.getAllBoardCount(option).orElse(0);
+		return dao.getAllBoardCount(option);
 	}
 
 	/**
@@ -68,9 +65,8 @@ public class FreeBoardService {
 	 * @param boardNo 게시글 번호
 	 * @param doIncreaseViews 조회수 증가 사용 여부(게시글 조회용)
 	 * @return 게시글
-	 * @throws SQLException 게시글 조회수 증가 실패
 	 */
-	public Optional<BoardSelect> getBoard(int boardNo, boolean doIncreaseViews) throws SQLException {
+	public Optional<BoardSelect> getBoard(int boardNo, boolean doIncreaseViews) {
 		if (doIncreaseViews) dao.increaseViews(boardNo);
 		return dao.getBoard(boardNo);
 	}
@@ -96,21 +92,18 @@ public class FreeBoardService {
 
 	/**
 	 * 게시글 등록
-	 * @param b 등록할 게시글
+	 * @param board 등록할 게시글
 	 * @return 등록된 게시글의 게시글 번호
-	 * @throws SQLException 게시글 등록 실패
 	 * @throws IOException 첨부파일 저장 경로 접근 불가 | ?
 	 */
 	@Transactional(rollbackFor = Exception.class)
-	public int insertBoard(BoardInsert b, List<MultipartFile> files) throws SQLException, IOException {
+	public void insertBoard(BoardInsert board, List<MultipartFile> files) throws IOException {
 		boolean exist = files != null && !files.isEmpty();
 
-		b.setAttach(exist);
-		dao.insertBoard(b);
+		board.setAttach(exist);
+		dao.insertBoard(board);
 
-		if (exist) insertAttachList(b.getBoardNo(), files);
-
-		return b.getBoardNo();
+		if (exist) insertAttachList(board.getBoardNo(), files);
 	}
 
 	/**
@@ -120,45 +113,38 @@ public class FreeBoardService {
 	 * @return 수정된 게시글의 게시글 번호
 	 * @throws IllegalArgumentException 비밀번호 불일치 | ?
 	 * @throws IOException 저장위치 사용 불가 | ?
-	 * @throws SQLException 게시글 수정 실패
 	 */
 	@Transactional(rollbackFor = Exception.class)
-	public int updateBoard(BoardUpdate b, List<MultipartFile> files) throws IllegalArgumentException, IOException, SQLException {
-		if (!matchBoardPassword(b.getBoardNo(), b.getPassword()))
-			throw new IllegalArgumentException("비밀번호 불일치");
+	public void updateBoard(BoardUpdate board, List<MultipartFile> files) throws IllegalArgumentException, IOException {
+		matchBoardPassword(board.getBoardNo(), board.getPassword());
 
-		dao.updateBoard(b);
-		updateAttach(b.getBoardNo(), b.getAttach(), files);
-
-		return b.getBoardNo();
+		dao.updateBoard(board);
+		updateAttach(board.getBoardNo(), board.getAttach(), files);
 	}
 
 	/**
 	 * 댓글 등록
-	 * @param r 등록할 댓글
-	 * @throws SQLException 댓글 등록 실패
+	 * @param reply 등록할 댓글
 	 */
-	public void insertReply(ReplyInsert r) throws SQLException {
-		dao.insertReply(r);
+	public void insertReply(ReplyInsert reply) {
+		dao.insertReply(reply);
 	}
 
 	/**
 	 * 게시글 및 댓글 및 첨부파일 삭제
-	 * @param b 삭제할 게시글
+	 * @param board 삭제할 게시글
 	 * @throws IllegalArgumentException 비밀번호 불일치
-	 * @throws SQLException 게시글 삭제 실패
 	 */
 	@Transactional(rollbackFor = Exception.class)
-	public void deleteBoard(BoardDelete b) throws IllegalArgumentException, SQLException {
-		if (!matchBoardPassword(b.getBoardNo(), b.getPassword()))
-			throw new IllegalArgumentException("비밀번호 불일치");
-		List<AttachMetadata> a = dao.getAttachList(b.getBoardNo());
+	public void deleteBoard(BoardDelete board) throws IllegalArgumentException {
+		matchBoardPassword(board.getBoardNo(), board.getPassword());
+		List<AttachMetadata> attachs = dao.getAttachList(board.getBoardNo());
 
-		dao.deleteAllReply(b.getBoardNo());
-		dao.deleteAllAttach(b.getBoardNo());
-		dao.deleteBoard(b.getBoardNo());
+		dao.deleteReplyList(board.getBoardNo());
+		dao.deleteAllAttach(board.getBoardNo());
+		dao.deleteBoard(board.getBoardNo());
 
-		processor.fileRemove(a);
+		fileManager.fileRemove(attachs);
 	}
 
 	/**
@@ -167,8 +153,8 @@ public class FreeBoardService {
 	 * @param attachNo 첨부파일 번호
 	 * @return 파일 메타데이터
 	 */
-	public Optional<AttachMetadata> getAttach(AttachNum a) {
-		return dao.getAttach(a);
+	public Optional<AttachMetadata> getAttach(AttachNum attach) {
+		return dao.getAttach(attach);
 	}
 
 	/**
@@ -177,8 +163,8 @@ public class FreeBoardService {
 	 * @return 실제 첨부파일
 	 * @throws IOException 저장 위치 사용 불가
 	 */
-	public FileSystemResource getAttachResource(@NotNull AttachMetadata a) throws IOException {
-		return processor.getAttachFromSystem(a);
+	public FileSystemResource getAttachResource(AttachMetadata attach) throws IOException {
+		return fileManager.getAttachFromSystem(attach);
 	}
 
 	/**
@@ -186,14 +172,13 @@ public class FreeBoardService {
 	 * @param boardNo 게시글 번호
 	 * @param files 업로드 할 파일들(1개 이상 필수)
 	 * @throws IOException 저장위치 사용불가 | 유효하지 않은 파일 | ?
-	 * @throws SQLException 주어진 첨부파일 전부/일부 등록 실패
 	 */
-	public void insertAttachList(int boardNo, @NotNull @NotEmpty List<MultipartFile> files) throws IOException, SQLException {
-		processor.validateFileList(files);
-		List<AttachMetadata> a = processor.multipartFileToAttachs(boardNo, files);
+	public void insertAttachList(int boardNo, List<MultipartFile> files) throws IOException {
+		fileManager.validateFileList(files);
+		List<AttachMetadata> attach = fileManager.makeMetadataFromFile(boardNo, files);
 
-		dao.insertAttachList(a);
-		processor.fileSave(files, a);
+		dao.insertAttachList(attach.stream().filter(a -> a != null).toList());
+		fileManager.fileSave(files, attach);
 	}
 
 
@@ -202,46 +187,32 @@ public class FreeBoardService {
 	 * @param boardNo 게시글 번호
 	 * @param password 사용자가 입력한 비밀번호
 	 * @return 비밀번호 일치 여부
-	 */	// TODO ? 인자 검증은 누구의 역할인가?
-	public boolean matchBoardPassword(int boardNo, @NotEmpty String password) {
-		return new BCryptPasswordEncoder().matches(password, dao.getBoardPassword(boardNo).orElse(""));
+	 * @throws IllegalArgumentException 비밀번호 불일치
+	 */
+	public void matchBoardPassword(int boardNo, @NotEmpty String password) throws IllegalArgumentException {
+		if (!new BCryptPasswordEncoder().matches(password, dao.getBoardPassword(boardNo)))
+			throw new IllegalArgumentException("비밀번호 불일치");
 	}
 
 	/**
 	 * @param boardNo 게시글 번호
-	 * @param afterAttach 수정하지 않고 남길 기존의 첨부파일
-	 * @param files 새로 등록할 첨부파일들
-	 * @throws IOException 저장위치 사용 불가 | ?
-	 * @throws SQLException 주어진 첨부파일들 전부/일부 삭제 실패
+	 * @param attachs 삭제할 첨부파일 목록
+	 * @param files 새로 등록할 첨부파일 목록
+	 * @throws IOException ?
+	 * @throws NullPointerException 인자에 null이 주어짐
+	 * @throws IllegalStateException 파일 이미 저장됨
 	 */
-	private void updateAttach(int boardNo, List<AttachNum> afterAttach, List<MultipartFile> files) throws IOException, SQLException {
-		List<AttachMetadata> beforeAttach = dao.getAttachList(boardNo);
-		boolean beforeHasSomething = beforeAttach != null && !beforeAttach.isEmpty(),
-		afterHasSomething = afterAttach != null && !afterAttach.isEmpty(),
-		filesHasSomething = files != null && !files.isEmpty();
+	private void updateAttach(int boardNo, List<AttachNum> attachs, List<MultipartFile> files) throws IllegalStateException, NullPointerException, IOException {
+		boolean attachsHasVal = attachs != null && !attachs.isEmpty(),
+				filesHasVal = files != null && !files.isEmpty();
+		List<AttachMetadata> metadata = dao.getAttachList(boardNo);
 
-//		beforeAttach, afterAttach, files 셋 다 없으면 안해도 됨
-		if (!beforeHasSomething && !afterHasSomething && !filesHasSomething) return;
+		if (!attachsHasVal && !filesHasVal) return;
 
-		if (beforeHasSomething && beforeAttach.size() != Optional.ofNullable(afterAttach).orElse(new ArrayList<>()).size()) {	// 삭제할 게 있으면
-//			기존 attmeta 와 변경한 attmeta을 비교하여 삭제할 list<attmeta> 생성(bef - aft)
-			if (afterHasSomething) beforeAttach.removeIf(a -> afterAttach.contains(a));
+		if (attachsHasVal) dao.deleteAttachList(attachs.stream().filter(attach -> attach != null).toList());
 
-//			DB 삭제 및 저장된 파일 삭제
-			dao.deleteAttachList(beforeAttach.parallelStream().map(a -> (AttachNum) a).toList());
-			processor.fileRemove(beforeAttach);
-		}
+		if (filesHasVal) insertAttachList(boardNo, files);
 
-		if (filesHasSomething) {	// 추가할 게 있으면
-			processor.validateFileList(files);
-
-//			새로 등록할 files로 기존에 존재하던 첨부파일(aft) 번호를 피해서 list<attmeta>를 만든다
-			List<AttachMetadata> newAttach = processor.multipartFileToAttachs(boardNo, files,
-					afterHasSomething ? afterAttach.parallelStream().mapToInt(AttachNum::getAttachNo).toArray() : null);
-
-//			등록 및 저장
-			dao.insertAttachList(newAttach);
-			processor.fileSave(files, newAttach);
-		}
+		if (attachsHasVal) fileManager.fileRemove(metadata);
 	}
 }

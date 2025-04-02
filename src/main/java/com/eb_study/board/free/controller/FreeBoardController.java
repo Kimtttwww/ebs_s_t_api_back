@@ -2,17 +2,18 @@ package com.eb_study.board.free.controller;
 
 import java.io.IOException;
 import java.rmi.NoSuchObjectException;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -78,7 +79,7 @@ public class FreeBoardController {
 	@Operation(summary = "카테고리 목록 조회", description = "게시글 유형 목록 조회 페이지")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("board/free/category")
+	@GetMapping("category/free")
 	public ResponseEntity<List<Category>> getCategoryList() {
 		return ResponseEntity.ok(service.getCategoryList());
 	}
@@ -88,7 +89,6 @@ public class FreeBoardController {
 	 * @param boardNo 게시글 번호
 	 * @param doIncreaseViews 조회수 증가 여부
 	 * @return 게시글
-	 * @throws SQLException 게시글 조회수 증가 실패
 	 */
 	@Operation(summary = "게시글 조회", description = "단일 게시글 조회")
 	@ApiResponse(responseCode = "200", description = "ok")
@@ -99,7 +99,7 @@ public class FreeBoardController {
 			@PathVariable("boardNo") @Positive int boardNo,
 		@Parameter(description = "조회수 증가 여부, (URL Parameter)", required = false, examples = {@ExampleObject(value = "true", description = "조회수 증가"), @ExampleObject(value = "false", description = "조회수 불변")})
 			@RequestParam(name = "add", required = false) boolean doIncreaseViews
-			) throws SQLException {
+			) throws Exception {
 		return ResponseEntity.ofNullable(service.getBoard(boardNo, doIncreaseViews).orElse(null));
 	}
 
@@ -113,7 +113,7 @@ public class FreeBoardController {
 	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("board/download/{boardNo}/{attachNo}")
+	@GetMapping("attach/{boardNo}/{attachNo}")
 	public ResponseEntity<FileSystemResource> downloadAttach(
 		@Parameter(description = "게시글번호", required = true)
 			@PathVariable("boardNo") @Positive int boardNo,
@@ -141,10 +141,10 @@ public class FreeBoardController {
 	@Operation(summary = "첨부파일 목록 조회", description = "게시글의 첨부파일 목록 조회")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error", useReturnTypeSchema = false)
-	@GetMapping("board/attach")
+	@GetMapping("attach/{boardNo}")
 	public ResponseEntity<List<OutAttach>> getAttachList(
 		@Parameter(description = "첨부파일이 있을 게시글 번호", required = true)
-			@RequestParam("boardNo") @Positive int boardNo) {
+			@PathVariable("boardNo") @Positive int boardNo) {
 		return ResponseEntity.ofNullable(mapper.toOutDTO(service.getAttachList(boardNo)));
 	}
 
@@ -156,10 +156,10 @@ public class FreeBoardController {
 	@Operation(summary = "댓글 목록 조회", description = "게시글의 댓글 목록 조회")
 	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@GetMapping("board/reply")
+	@GetMapping("reply/{boardNo}")
 	public ResponseEntity<List<ReplySelect>> getReplyList(
 		@Parameter(description = "댓글이 있을 게시글 번호", required = true)
-			@RequestParam("boardNo") @Positive int boardNo) {
+			@PathVariable("boardNo") @Positive int boardNo) {
 		return ResponseEntity.ofNullable(service.getReplyList(boardNo));
 	}
 
@@ -174,14 +174,15 @@ public class FreeBoardController {
 	@ApiResponse(responseCode = "200", description = "ok, 등록된 게시글 번호 반환")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@PostMapping("board/free/write")
-	public ResponseEntity<Integer> insertBoard(
+	@PostMapping("board/free")
+	public ResponseEntity<?> insertBoard(
 		@Parameter(description = "작성할 게시글, 유효성 검사 있음 (form)", required = true)
-			@ModelAttribute @Valid InBoardInsert b,
+			@ModelAttribute @Valid InBoardInsert board,
 		@Parameter(description = "작성할 게시글의 첨부파일", required = false)
 			@RequestParam(name = "attachs", required = false) List<MultipartFile> files
 			) throws Exception {
-		return ResponseEntity.ofNullable(service.insertBoard(mapper.toEntity(b), files));
+		service.insertBoard(mapper.toEntity(board), files);
+		return ResponseEntity.noContent().build();
 	}
 
 	/**
@@ -193,35 +194,35 @@ public class FreeBoardController {
 	 * @throws Exception 게시글 수정 실패 | 저장위치 사용 불가 | ?
 	 */
 	@Operation(summary = "게시글 수정", description = "게시글 내용 수정")
-	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "204", description = "ok")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력(비밀번호 불일치 등)")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@PostMapping("board/free/modify")
-	public ResponseEntity<Integer> updateBoard(
+	@PutMapping("board/free")
+	public ResponseEntity<?> updateBoard(
 		@Parameter(description = "수정할 게시글 내용과 변경되지 않을 첨부파일들, 유효성 검사 있음 (form)", required = true)
-			@ModelAttribute @Valid BoardUpdate b,
+			@ModelAttribute @Valid BoardUpdate board,
 		@Parameter(description = "수정할 게시글 내용", name = "newAttach", required = false)
 			@RequestParam(name = "newAttach", required = false) List<MultipartFile> files
 			) throws Exception {
-		return ResponseEntity.ok(service.updateBoard(mapper.toEntity(b), files));
+		service.updateBoard(mapper.toEntity(board), files);
+		return ResponseEntity.noContent().build();
 	}
 
 	/**
 	 * 댓글 등록
 	 * @param reply 등록할 댓글
-	 * @throws SQLException 댓글 등록 실패
 	 */
 	@Operation(summary = "댓글 등록", description = "게시글의 댓글 등록")
-	@ApiResponse(responseCode = "200", description = "ok")
+	@ApiResponse(responseCode = "200", description = "추가된 댓글이 포함된 댓글 목록")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@PostMapping("board/reply")
+	@PostMapping("reply")
 	public ResponseEntity<List<ReplySelect>> insertReply(
 		@Parameter(description = "등록할 댓글 내용, 유효성 검사 있음 (json)", required = true)
-			@RequestBody @Valid ReplyInsert r
+			@RequestBody @Valid ReplyInsert reply
 			) throws Exception {
-		service.insertReply(r);
-		return getReplyList(r.getBoardNo());
+		service.insertReply(reply);
+		return getReplyList(reply.getBoardNo());
 	}
 
 	/**
@@ -230,18 +231,17 @@ public class FreeBoardController {
 	 * @param password 비밀번호
 	 * @return 게시글 + 댓글 + 첨부파일 삭제 여부
 	 * @throws IllegalArgumentException 비밀번호 불일치
-	 * @throws SQLException 게시글 삭제 실패
 	 */
 	@Operation(summary = "게시글 삭제", description = "게시글 및 연관된 댓글 삭제")
 	@ApiResponse(responseCode = "204", description = "ok")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
 	@ApiResponse(responseCode = "500", description = "server error")
-	@PostMapping("board/free/remove")
+	@DeleteMapping("board/free")
 	public ResponseEntity<?> deleteBoard(
-		@Parameter(description = "삭제할 게시글 내용, 유효성 검사 있음 (json)", required = true)
-			@RequestBody @Valid BoardDelete b
+		@Parameter(description = "삭제할 게시글 내용, 유효성 검사 있음 (form)", required = true)
+			@ModelAttribute @Valid BoardDelete board
 			) throws Exception {
-		service.deleteBoard(b);
+		service.deleteBoard(board);
 		return ResponseEntity.noContent().build();
 	}
 }

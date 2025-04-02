@@ -31,37 +31,45 @@ import com.eb_study.common.InputChecker;
 public interface FreeBoardMapper {
 	FreeBoardSearchOption toEntity(InFreeBoardSearchOption ifbso);
 
-	BoardInsert toEntity(InBoardInsert b);
+	BoardInsert toEntity(InBoardInsert board);
 
-	BoardUpdate toEntity(BoardUpdate b);
+	BoardUpdate toEntity(BoardUpdate board);
 
-	ReplyInsert toEntity(ReplyInsert b);
+	ReplyInsert toEntity(ReplyInsert reply);
 
-	@Mapping(target = "fileName", expression = "java(a != null ? String.format(\"%s.%s\", a.getFileOrigin(), a.getExt()) : \"\")")
-	OutAttach toOutDTO(AttachMetadata a);
+	@Mapping(target = "fileName", expression = "java(attach != null ? String.format(\"%s.%s\", attach.getFileOrigin(), attach.getExt()) : \"\")")
+	OutAttach toOutDTO(AttachMetadata attach);
 
-	List<OutAttach> toOutDTO(List<AttachMetadata> a);
+	List<OutAttach> toOutDTO(List<AttachMetadata> attachs);
 
 
 	@AfterMapping
 	default void fbsoAfter(@MappingTarget FreeBoardSearchOption fbso) {
-		fbso.setOffset((fbso.getCurrentPage() - 1) * fbso.getPerPage());
+		if (fbso != null) {
+			fbso.setOffset((fbso.getCurrentPage() - 1) * fbso.getPerPage());
+		}
 	}
 
 	@AfterMapping
-	default void boardContentAfter(@MappingTarget BoardContent b) {
-		b.setTitle(InputChecker.htmlEntityFilter(b.getTitle()));
-		b.setContent(InputChecker.htmlEntityFilter(b.getContent()));
+	default void boardContentAfter(@MappingTarget BoardContent board) {
+		if (board != null) {
+			board.setTitle(InputChecker.htmlEntityFilter(board.getTitle()));
+			board.setContent(InputChecker.htmlEntityFilter(board.getContent()));
+		}
 	}
 
 	@AfterMapping
-	default void boardInsertAfter(@MappingTarget BoardInsert b) {
-		b.setPassword(new BCryptPasswordEncoder().encode(b.getPassword()));
-		b.setWriter(InputChecker.htmlEntityFilter(b.getWriter()));
+	default void boardInsertAfter(@MappingTarget BoardInsert board) {
+		if (board != null) {
+			board.setPassword(new BCryptPasswordEncoder().encode(board.getPassword()));
+			board.setWriter(InputChecker.htmlEntityFilter(board.getWriter()));
+		}
 	}
 
 	@AfterMapping
-	default void replyContentAfter(@MappingTarget ReplyContent r) {
-		r.setContent(InputChecker.htmlEntityFilter(r.getContent()));
+	default void replyContentAfter(@MappingTarget ReplyContent reply) {
+		if (reply != null) {
+			reply.setContent(InputChecker.htmlEntityFilter(reply.getContent()));
+		}
 	}
 }

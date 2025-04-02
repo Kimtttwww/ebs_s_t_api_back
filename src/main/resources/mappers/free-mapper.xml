@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="freeBoardMapper">
+<mapper namespace="com.eb_study.board.free.model.dao.FreeBoardDao">
 
 	<sql id="listFLFOption">
 		<where>
@@ -8,7 +8,7 @@
 	 			AND created &gt;= #{startDate}
 			</if>
 			<if test='endDate neq null'>
-	 			AND created &lt; STR_TO_DATE(#{endDate}, '%Y-%m-%d') + 1
+	 			AND created &lt; DATE_ADD(STR_TO_DATE('2025-03-31', '%Y-%m-%d'), INTERVAL 1 DAY)
 			</if>
 			<if test='category gt 0'>
 				AND category_no = #{category}
@@ -29,6 +29,11 @@
 		JOIN CATEGORY USING(category_no)
 	</sql>
 
+	<sql id="attachs">
+		SELECT * FROM ATTACH
+		WHERE board_no = #{boardNo}
+	</sql>
+
 	<select id="getBoardList" parameterType="freeBoardSearchOption" resultType="boardSelect">
 		<include refid="joinBoardToCategoryPrefix" />
 			SELECT * FROM BOARD
@@ -36,10 +41,6 @@
 			ORDER BY created DESC, board_no DESC
 			LIMIT #{offset}, #{perPage}
 		<include refid="joinBoardToCategorySuffix" />
-	</select>
-
-	<select id="getCategoryList" resultType="category">
-		SELECT * FROM CATEGORY
 	</select>
 
 	<select id="getBoard" parameterType="int" resultType="boardSelect">
@@ -54,36 +55,18 @@
 		<include refid="listFLFOption" />
 	</select>
 
-	<select id="getBoardPassword" parameterType="int" resultType="string">
-		SELECT password FROM BOARD
-		WHERE board_no = #{boardNo}
-	</select>
-
-	<select id="getAttachs" parameterType="attachNum" resultType="attachMetadata">
-		SELECT * FROM ATTACH
-		<where>
-			AND board_no = #{boardNo}
-			<if test="attachNo > 0">
-				AND attach_no = #{attachNo}
-			</if>
-		</where>
+	<select id="getAttachList" parameterType="int" resultType="attachMetadata">
+		<include refid="attachs" />
 		ORDER BY attach_no
 	</select>
 
-	<select id="getReplyList" parameterType="int" resultType="replySelect">
-		SELECT * FROM REPLY
-		WHERE board_no = #{boardNo}
-		ORDER BY created
+	<select id="getAttach" parameterType="attachNum" resultType="attachMetadata">
+		<include refid="attachs" />
+		AND attach_no = #{attachNo}
 	</select>
 
 
-	<update id="increaseViews" parameterType="int">
-		UPDATE BOARD
-		SET VIEWS = VIEWS + 1
-		WHERE board_no = #{boardNo}
-	</update>
-
-	<insert id="insertBoard" parameterType="boardInsert" useGeneratedKeys="true" keyColumn="BOARD_NO" keyProperty="boardNo">
+	<insert id="insertBoard" parameterType="boardInsert">
 		INSERT INTO BOARD(category_no, writer, password, title, content, attach)
 		VALUES (#{categoryNo}, #{writer}, #{password}, #{title}, #{content}, #{attach})
 	</insert>
@@ -101,28 +84,13 @@
 		VALUES (#{boardNo}, #{content})
 	</insert>
 
-	<delete id="deleteReply" parameterType="int">
-		DELETE FROM REPLY
-		WHERE board_no = #{boardNo}
-	</delete>
-
-	<delete id="deleteBoard" parameterType="int">
-		DELETE FROM BOARD
-		WHERE board_no = #{boardNo}
-	</delete>
-
-	<insert id="insertAttachs" parameterType="list">
+	<insert id="insertAttachList" parameterType="list">
 		INSERT INTO ATTACH
 		VALUES 
 		<foreach collection="list" item="a" separator=",">
 			(#{a.boardNo}, #{a.attachNo}, #{a.fileOrigin}, #{a.fileRename}, #{a.ext})
 		</foreach>
 	</insert>
-
-	<delete id="deleteAttachs" parameterType="int">
-		DELETE FROM ATTACH
-		WHERE board_no = #{boardNo}
-	</delete>
 
 	<delete id="deleteAttachList" parameterType="list">
 		DELETE FROM ATTACH
