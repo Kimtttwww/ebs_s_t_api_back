@@ -21,7 +21,7 @@ import com.eb_study.board.free.model.dto.InFreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.OutAttach;
 import com.eb_study.board.free.model.dto.ReplyContent;
 import com.eb_study.board.free.model.dto.ReplyInsert;
-import com.eb_study.common.InputChecker;
+import com.eb_study.common.util.InputChecker;
 
 @Mapper(
 		componentModel = ComponentModel.SPRING,

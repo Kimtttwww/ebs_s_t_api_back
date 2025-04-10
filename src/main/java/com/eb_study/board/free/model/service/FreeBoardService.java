@@ -21,7 +21,7 @@ import com.eb_study.board.free.model.dto.Category;
 import com.eb_study.board.free.model.dto.FreeBoardSearchOption;
 import com.eb_study.board.free.model.dto.ReplyInsert;
 import com.eb_study.board.free.model.dto.ReplySelect;
-import com.eb_study.file.FileManager;
+import com.eb_study.common.file.FileManager;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;

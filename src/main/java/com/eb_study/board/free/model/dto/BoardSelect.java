@@ -15,9 +15,6 @@ public class BoardSelect extends BoardContent {
 	@Schema(description = "게시글 번호", nullable = false)
 	private int boardNo;
 
-	@Schema(description = "게시글 유형 번호", nullable = false)
-	private int categoryNo;
-
 	@Schema(description = "게시글 유형명", nullable = true)
 	private String categoryName;
 

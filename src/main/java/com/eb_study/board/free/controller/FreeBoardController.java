@@ -58,8 +58,6 @@ public class FreeBoardController {
 	 * @return 게시글 목록과 검색 조건
 	 */
 	@Operation(summary = "게시글 목록 조회", description = "게시글 목록 조회 페이지")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("board/free")
 	public ResponseEntity<OutBoardSelectList> getBoardList(
 		@Parameter(description = "검색 조건, (Json)", required = false, allowEmptyValue = true)
@@ -77,8 +75,6 @@ public class FreeBoardController {
 	 * @return 게시글 유형 목록
 	 */
 	@Operation(summary = "카테고리 목록 조회", description = "게시글 유형 목록 조회 페이지")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("category/free")
 	public ResponseEntity<List<Category>> getCategoryList() {
 		return ResponseEntity.ok(service.getCategoryList());
@@ -91,8 +87,6 @@ public class FreeBoardController {
 	 * @return 게시글
 	 */
 	@Operation(summary = "게시글 조회", description = "단일 게시글 조회")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("board/free/{boardNo}")
 	public ResponseEntity<BoardSelect> getBoard(
 		@Parameter(description = "게시글번호", required = true)
@@ -111,8 +105,6 @@ public class FreeBoardController {
 	 * @throws IOException 저장위치 사용 불가 | 해당 첨부파일 없음 | ?
 	 */
 	@Operation(summary = "파일 다운로드", description = "첨부파일 다운로드")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("attach/{boardNo}/{attachNo}")
 	public ResponseEntity<FileSystemResource> downloadAttach(
 		@Parameter(description = "게시글번호", required = true)
@@ -139,8 +131,6 @@ public class FreeBoardController {
 	 * @return 첨부파일 목록
 	 */
 	@Operation(summary = "첨부파일 목록 조회", description = "게시글의 첨부파일 목록 조회")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error", useReturnTypeSchema = false)
 	@GetMapping("attach/{boardNo}")
 	public ResponseEntity<List<OutAttach>> getAttachList(
 		@Parameter(description = "첨부파일이 있을 게시글 번호", required = true)
@@ -154,8 +144,6 @@ public class FreeBoardController {
 	 * @return 댓글 목록
 	 */
 	@Operation(summary = "댓글 목록 조회", description = "게시글의 댓글 목록 조회")
-	@ApiResponse(responseCode = "200", description = "ok")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@GetMapping("reply/{boardNo}")
 	public ResponseEntity<List<ReplySelect>> getReplyList(
 		@Parameter(description = "댓글이 있을 게시글 번호", required = true)
@@ -171,9 +159,8 @@ public class FreeBoardController {
 	 * @throws Exception 게시글 등록 실패 | ?
 	 */
 	@Operation(summary = "게시글 등록", description = "새 게시글 등록")
-	@ApiResponse(responseCode = "200", description = "ok, 등록된 게시글 번호 반환")
+	@ApiResponse(responseCode = "204", description = "ok")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("board/free")
 	public ResponseEntity<?> insertBoard(
 		@Parameter(description = "작성할 게시글, 유효성 검사 있음 (form)", required = true)
@@ -194,9 +181,8 @@ public class FreeBoardController {
 	 * @throws Exception 게시글 수정 실패 | 저장위치 사용 불가 | ?
 	 */
 	@Operation(summary = "게시글 수정", description = "게시글 내용 수정")
-	@ApiResponse(responseCode = "204", description = "ok")
+	@ApiResponse(responseCode = "200", description = "ok")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력(비밀번호 불일치 등)")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@PutMapping("board/free")
 	public ResponseEntity<?> updateBoard(
 		@Parameter(description = "수정할 게시글 내용과 변경되지 않을 첨부파일들, 유효성 검사 있음 (form)", required = true)
@@ -215,7 +201,6 @@ public class FreeBoardController {
 	@Operation(summary = "댓글 등록", description = "게시글의 댓글 등록")
 	@ApiResponse(responseCode = "200", description = "추가된 댓글이 포함된 댓글 목록")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@PostMapping("reply")
 	public ResponseEntity<List<ReplySelect>> insertReply(
 		@Parameter(description = "등록할 댓글 내용, 유효성 검사 있음 (json)", required = true)
@@ -235,7 +220,6 @@ public class FreeBoardController {
 	@Operation(summary = "게시글 삭제", description = "게시글 및 연관된 댓글 삭제")
 	@ApiResponse(responseCode = "204", description = "ok")
 	@ApiResponse(responseCode = "400", description = "유효하지 않은 입력")
-	@ApiResponse(responseCode = "500", description = "server error")
 	@DeleteMapping("board/free")
 	public ResponseEntity<?> deleteBoard(
 		@Parameter(description = "삭제할 게시글 내용, 유효성 검사 있음 (form)", required = true)

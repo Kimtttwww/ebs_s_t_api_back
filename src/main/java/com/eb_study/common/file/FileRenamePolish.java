@@ -1,4 +1,4 @@
-package com.eb_study.file;
+package com.eb_study.common.file;
 
 public interface FileRenamePolish {
 	/**

@@ -1,4 +1,4 @@
-package com.eb_study.file;
+package com.eb_study.common.file;
 
 import java.io.IOException;
 import java.util.List;

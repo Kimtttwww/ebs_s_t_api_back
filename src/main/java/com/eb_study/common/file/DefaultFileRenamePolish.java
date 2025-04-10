@@ -1,4 +1,4 @@
-package com.eb_study.file;
+package com.eb_study.common.file;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
